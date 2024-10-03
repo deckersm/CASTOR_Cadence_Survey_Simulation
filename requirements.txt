@@ -1,0 +1,15 @@
+# Astronomy and cosmology libraries
+astropy==5.2.2  
+dustmaps==1.0.8
+extinction==0.4.0
+
+# Scientific computing libraries
+numpy==1.23.5
+pandas==2.0.3
+matplotlib==3.7.2
+
+# Additional dependencies
+psutil==5.9.5  # For system utilities
+
+# Custom package from Git repository
+git+https://github.com/CASTOR-telescope/ETC.git  # castor_etc package
