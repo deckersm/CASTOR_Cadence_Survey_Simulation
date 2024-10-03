@@ -13,7 +13,7 @@ This software simulates transients for the CASTOR Cadence Survey: A Wide-Field U
 
 ## Installation
 Clone this repository:
-git clone https://github.com/yourusername/yourproject.git
+git clone [https://github.com/yourusername/yourproject.git](https://github.com/deckersm/CASTOR_Cadence_Survey_Simulation.git)
 
 pip install -r requirements.txt
 
