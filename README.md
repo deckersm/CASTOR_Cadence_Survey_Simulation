@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ## Usage
 To run a simulation:
 
-python castor_simulation.py <transient_type> <max_redshift> <filter_for_statistics> <survey_cadence>
+python main.py <transient_type> <max_redshift> <filter_for_statistics> <survey_cadence (integer multiples of 1)>
 
 ## 6. Configuration
 - The software is currently set up to run a simulation based on the CASTOR survey parameters, these can be changed to simulate other surveys. To change the telescope parameters, we point the user to the FORECASTOR ETC (https://github.com/CASTOR-telescope/ETC) for further details. These can then be directly implemented in the `config_telescope()` function in `utils.py` file where all the FORECASTOR ETC functions are called.
