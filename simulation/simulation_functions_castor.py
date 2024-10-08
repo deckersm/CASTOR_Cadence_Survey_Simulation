@@ -166,7 +166,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
 
     
     # Numbering each transient light curve
-    start_number = len(all_results)  # Continue numbering from where the last run left off
+    start_number = len(set(all_results['number']))  # Continue numbering from where the last run left off
 
 
     for number in np.arange(start_number, start_number + remaining_count, 1):
