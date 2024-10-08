@@ -1,36 +1,10 @@
-from astropy.cosmology import Planck18 as cosmo  # Using Planck18 cosmology
-from astropy.cosmology import FlatLambdaCDM 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from dustmaps.planck import PlanckQuery
-from dustmaps.sfd import SFDQuery
-import matplotlib.pyplot as plt
 import numpy as np
-import math
-from matplotlib.colors import LogNorm
 import pandas as pd
-import glob
-import sys
-import os
-import extinction
-import time
-import psutil
-from astropy.coordinates import SkyCoord
-import dustmaps.sfd
-import gc
-
 
 from castor_etc.background import Background
 from castor_etc.photometry import Photometry
 from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
-
-
-
-######################################################################################################################################################################################
-#### #### #### #### ####                         Functions to inject tranients at particular redshifts depending on rates                                          #### #### #### #### 
-######################################################################################################################################################################################
-
 
 
 # Star formation rate density function (Madau & Dickinson 2014) -- check for more up to date versions (2018>) check Graur (2017)
@@ -54,21 +28,7 @@ def snia_rate(z):
     return np.piecewise(z, [z <= 1.0, z > 1.0], [lambda x:2.5e-5 * (1. + x)**1.5, lambda x:9.7e-5 * (1. + x)**(0.5)])
    
 
-"""
-# Function returning the CC volumetric rate at redshift intervals taken from Strolger (2015) -> adopted from plasticc code
-def cc_rate(z):
-
-    fx = np.piecewise(z, [(z <= 0.08) * (z > 0), 
-                            (z <= 0.29) * (z > 0.08), 
-                            (z <= 0.47) * (z > 0.29), 
-                            (z <= 0.72) * (z > 0.29), 
-                            (z <= 1.56) * (z > 0.72), 
-                            (z > 1.56)], 
-                            [0.72e-4, 1.33e-4, 1.81e-4, 3.91e-4, 3.22e-4, 3.76e-4])
-
-    return fx
-"""
-
+# Function returning the CC volumetric rate at each redshift taken from Strolger (2015) - from a fit to fig. 6 in this paper -> adopted from plasticc code
 def cc_rate(z):
     strolger = pd.DataFrame(pd.read_csv('../Rates/strolger2015_cc_rate.csv'))
     rates = []

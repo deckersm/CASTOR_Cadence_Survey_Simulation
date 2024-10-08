@@ -1,36 +1,14 @@
-from astropy.cosmology import Planck18 as cosmo  # Using Planck18 cosmology
-from astropy.cosmology import FlatLambdaCDM 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from dustmaps.planck import PlanckQuery
-from dustmaps.sfd import SFDQuery
 import matplotlib.pyplot as plt
 import numpy as np
 import math
 from matplotlib.colors import LogNorm
 import pandas as pd
 import glob
-import sys
-import os
-import extinction
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from concurrent.futures import ProcessPoolExecutor
-import time
-import psutil
-from astropy.coordinates import SkyCoord
-import dustmaps.sfd
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from multiprocessing import freeze_support
-import multiprocessing as mp
-from functools import partial
-import gc
-
 
 from castor_etc.background import Background
 from castor_etc.photometry import Photometry
 from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
-
 
 
 ######################################################################################################################################################################################
@@ -108,6 +86,8 @@ def visualise_lc(results):
     for band in MyTelescope.passbands:
         ax.errorbar(results.loc[results['filter']==band, 'phase'], results.loc[results['filter']==band, 'mag'], yerr = results.loc[results['filter']==band, 'mag_err'], fmt = '.', linestyle = None, label = band, color = colours[c])
         c+=1
+
+        
     ax.invert_yaxis()
     ax.set_xlabel('Time since explosion [d]')
     ax.set_ylabel('Apparent magnitude')

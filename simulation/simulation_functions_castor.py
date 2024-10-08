@@ -1,48 +1,22 @@
-from astropy.cosmology import Planck18 as cosmo  # Using Planck18 cosmology
-from astropy.cosmology import FlatLambdaCDM 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from dustmaps.planck import PlanckQuery
-from dustmaps.sfd import SFDQuery
-import matplotlib.pyplot as plt
 import numpy as np
 import math
-from matplotlib.colors import LogNorm
 import pandas as pd
 import glob
-import sys
 import os
 import extinction
-import time
-import psutil
+from astropy import units as u
 from astropy.coordinates import SkyCoord
-import dustmaps.sfd
-import gc
+from dustmaps.sfd import SFDQuery
+from astropy.cosmology import FlatLambdaCDM 
 
-
-from castor_etc.background import Background
-from castor_etc.photometry import Photometry
-from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
-from castor_etc.telescope import Telescope
 
 # importing functions from other files
 import utils_castor as utils
 import rates_castor as rates
-#
-# To run this file, run the following command from the terminal:
-# python redshift_statistics.py <transient type> <minimum redshift> <maximum redshift>
 
-# Executing this file will run through all available models for the transient type
-# And put them at the range of redshifts specified
-# Run them through FORECASTOR to obtain the SNR and mag for each data point in the light curves
-# Then run detection statistics to determine which light curves would classify as detected and at what phase/mag they are detected
 
-# Requires template filenames to be of the format:
-# path_to_template_folder/{type}/SED_{type}_{model}_{phase}d.dat
+######################################################################################################################################################################################
 
-# Also requires the following folders to be set up within the ETC folder:
-# redshift results/  -> which will store the output light curves for each model at each redshift as seen by CASTOR
-# statistics/   -> which will store the detection statistics for each model at the range of redshifts specified by the user
 
 def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1, survey_area = 20):
     
@@ -59,6 +33,7 @@ def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1,
     rate = rate * u.Mpc**(-3) * u.yr**(-1)
 
     # Calculate the comoving volume element dV/dz (Mpc^3/sr) for each redshift bin
+    cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
     dVdz = cosmo.differential_comoving_volume(z_bins)  # Mpc^3/sr
     
     # Multiply by 4π (the whole sky in steradians) and the sky fraction to get the comoving volume over the survey area
@@ -173,7 +148,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
         try:
             result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground)
             
-            if not all_results.empty:
+            if len(all_results) != 0:
                 all_results = pd.concat([all_results, result])
             else:
                 all_results = result

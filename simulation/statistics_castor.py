@@ -1,42 +1,17 @@
-from astropy.cosmology import Planck18 as cosmo  # Using Planck18 cosmology
-from astropy.cosmology import FlatLambdaCDM 
-from astropy import units as u
-from astropy.coordinates import SkyCoord
-from dustmaps.planck import PlanckQuery
-from dustmaps.sfd import SFDQuery
-import matplotlib.pyplot as plt
 import numpy as np
 import math
-from matplotlib.colors import LogNorm
 import pandas as pd
 import glob
-import sys
 import os
+from astropy.cosmology import FlatLambdaCDM 
+from astropy import units as u
 import extinction
-import time
-import psutil
-from astropy.coordinates import SkyCoord
-import dustmaps.sfd
-import gc
-
-
-from castor_etc.background import Background
-from castor_etc.photometry import Photometry
-from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
-from castor_etc.telescope import Telescope
 
 # importing functions from other files
 import utils_castor as utils
 import rates_castor as rates
 import simulation_functions_castor as simul
-#from utils import config_telescope, config_background, config_source, get_photometry, create_lc
 
-
-
-
-######################################################################################################################################################################################
-#### #### #### #### ####                         Functions to extract statistics on which transients are detected and when.                                        #### #### #### #### 
-######################################################################################################################################################################################
 
 # Basic light curve detection condition
 def lc_detected_basic(lc, snr_lim = 5, n_det_above_snr = 2):
@@ -65,9 +40,12 @@ def mag_first_detection(lc, snr_lim = 5):
 def mag_at_peak(lc):
     est_t0 = lc['phase'][np.where(lc['mag']==np.nanmin(lc['mag']))[0][0]]
     lc_around_peak = lc.loc[(lc['phase'] < est_t0 + 7) & (lc['phase'] > est_t0 - 7)]
-    
+
+    lc_around_peak = lc_around_peak.sort_values(by = ['phase'])
+    lc_around_peak = lc_around_peak.reset_index(drop=True)
+
     # Fitting polynomial around peak to extract peak mag and time
-    z = np.polyfit(lc_around_peak['phase'], lc_around_peak['mag'], 2)
+    z = np.polyfit(lc_around_peak['phase'].astype(float), lc_around_peak['mag'].astype(float), 2)
     p = np.poly1d(z)
     x = np.arange(est_t0 - 7, est_t0 + 7, 0.01)
 
@@ -172,7 +150,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
     # Load existing statistics if they exist
     overview_file = 'results/statistics_{}_{}_{}.csv'.format(type, max_z, band)
     if os.path.isfile(overview_file):
-        overview = pd.read_csv(overview_file)
+        overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     else:
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
 
@@ -186,7 +164,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
     for number in numbers:
         result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
-        if not overview.empty:
+        if len(overview) != 0:
             overview = pd.concat([overview, result])
         else:
             overview = result
