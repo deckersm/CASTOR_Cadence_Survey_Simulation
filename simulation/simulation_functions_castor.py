@@ -15,8 +15,6 @@ import utils_castor as utils
 import rates_castor as rates
 
 
-######################################################################################################################################################################################
-
 
 def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1, survey_area = 20):
     
@@ -124,27 +122,25 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
         all_results = pd.read_csv(results_filename)
         print(f"Loaded existing results from {results_filename}\n")
 
-        # Calculate the number of transients already processed
-        processed_count = len(set(all_results['number']))
-        remaining_count = num_transients - processed_count
-        print(f"{processed_count} transients already processed, {remaining_count} left to process.\n")
+        # Check which numbered transients are already processed
+        processed_numbers = list(set(all_results['number']))
+        remaining_numbers = list(set(np.arange(0, num_transients, 1)) - set(processed_numbers))
+        print(f"{len(processed_numbers)} transients already processed, {len(remaining_numbers)} left to process.\n")
 
         # If all desired transients have been processed, exit
-        if remaining_count <= 0:
+        if len(remaining_numbers) <= 0:
+
             print("All desired transients have already been processed.\n")
             return all_results  # Return the existing results
     else:
         # If the file doesn't exist, create an empty DataFrame
         all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
-        remaining_count = num_transients
+        remaining_numbers = np.arange(0, num_transients, 1)
         print(f"No existing results found for {type} with maxz = {max_z}, starting fresh.\n")
 
-    
-    # Numbering each transient light curve
-    start_number = len(set(all_results['number']))  # Continue numbering from where the last run left off
 
+    for number in remaining_numbers:
 
-    for number in np.arange(start_number, start_number + remaining_count, 1):
         try:
             result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground)
             
@@ -155,9 +151,10 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
 
             # Save the results incrementally to avoid losing progress
             all_results.to_csv(results_filename, index=False)
-            print(f'Simulated transient {number}/{remaining_count}\n')
+            print(f'Simulated transient {number+1}/{num_transients}\n')
+
         except Exception as e:
-            print(f"Error processing transient {number}: {e}\n")
+            print(f"Error processing transient {number+1}: {e}\n")
             print()
     # Reset index and save the final results to a CSV
     all_results = all_results.reset_index(drop=True)
