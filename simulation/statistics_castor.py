@@ -135,7 +135,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', n_cores=8):
 
     # Check if redshift array file exists, else create it
-    redshift_filename = f'results/redshift_array_{type}_maxz_{max_z}.npy'
+    redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
 
     if os.path.exists(redshift_filename):
         redshift_array = np.load(redshift_filename)
