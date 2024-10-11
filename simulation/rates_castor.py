@@ -59,7 +59,11 @@ def slsn_rate(z):
 
 # SN Ib/c rate assumed to be 30% of CC rate -- following Shivvers (2017) -> adopted from plasticc code
 def snibc_rate(z):
-    return cc_rate(z) * 0.3
+    rate_ii = cc_rate(z)
+    rate_ibc = []
+    for i in range(len(rate_ii)):
+        rate_ibc.append(rate_ii[i] * 0.3)
+    return rate_ibc
 
 def transient_rate(type, z):
     if type == 'snia':
