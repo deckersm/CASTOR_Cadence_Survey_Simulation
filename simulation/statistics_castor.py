@@ -153,8 +153,9 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     else:
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
-
-    numbers_total = list(set(df['number']))
+    
+    num_transients = len(redshift_array)
+    numbers_total = np.arange(0, num_transients, 1)
     numbers_completed = list(set(overview['number']))
 
     numbers = list(set(numbers_total) - set(numbers_completed))

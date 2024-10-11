@@ -38,10 +38,9 @@ if __name__ == '__main__':
 
     type = sys.argv[1]
     max_z = float(sys.argv[2])
-    band = sys.argv[3]
 
-    if len(sys.argv) > 4:
-        cadence = sys_argv[4]
+    if len(sys.argv) > 3:
+        cadence = sys_argv[3]
     else:
         cadence = 1
 
@@ -59,8 +58,9 @@ if __name__ == '__main__':
     all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence)
 
     print('Finished simulating light curves, now running statistics \n')
-    overview = stats.statistics(all_results, max_z, type, band = band)
-    overview.to_csv('results/statistics_{}_{}_{}.csv'.format(type, max_z, band), index = False)
+    for band in ['uv', 'u', 'g']:
+        overview = stats.statistics(all_results, max_z, type, band = band)
+        overview.to_csv('results/statistics_{}_{}_{}.csv'.format(type, max_z, band), index = False)
 
     end = time.time()
     print('Total run time for simulation = {} seconds'.format(end - start))
