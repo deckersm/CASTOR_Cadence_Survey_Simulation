@@ -18,9 +18,15 @@ git clone [https://github.com/deckersm/CASTOR_Cadence_Survey_Simulation.git](htt
 pip install -r requirements.txt
 
 ## Usage
-To run a simulation:
+To run a simulation, make sure a `results` folder is set up inside the `simulation` folder and run the following command:
 
-python main.py <transient_type> <max_redshift> <filter_for_statistics> <survey_cadence (integer multiples of 1)>
+python main.py <transient_type> <max_redshift> <survey_cadence (integer multiples of 1)>
+
+This will produce several output files in the `results` folder:
+
+- A `redshift_array_<transient_type>__<max_redshift>.npy` file which contains the redshifts of the transients simulated.
+- A `results_<transient_type>_<max_redshift>.csv` file which contains the light curves of all the transients simulated.
+- a `statistics_<transient_type>_<max_redshift>_<filter>.csv` file which contains the detection statistics for all the generated transients in a particular filter.
 
 ## Configuration
 - The software is currently set up to run a simulation based on the CASTOR survey parameters, these can be changed to simulate other surveys. To change the telescope parameters, we point the user to the FORECASTOR ETC (https://github.com/CASTOR-telescope/ETC) for further details. These can then be directly implemented in the `config_telescope()` function in `utils.py` file where all the FORECASTOR ETC functions are called.
