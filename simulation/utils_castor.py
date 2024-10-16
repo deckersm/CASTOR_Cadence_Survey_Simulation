@@ -10,6 +10,7 @@ from castor_etc.photometry import Photometry
 from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
 
+import spectral_interpolation_castor as spec_interp
 
 ######################################################################################################################################################################################
 #### #### #### #### ####                         Functions to set up the telescope, background, and source objects.                                                #### #### #### #### 
@@ -34,8 +35,16 @@ def config_source(type, model, phase, z):
     # Create point source
     MySource = PointSource()
 
-    # Import TDE SED
-    filename = '/Users/maximedeckers/Documents/RSE/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
+    if os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
+        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    elif os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
+        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    else:
+        spectrum = spec_interp.create_spec_at_phase(type, model, phase)
+        spectrum.to_csv('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase), index = False, encoding='utf-8', sep = ' ')
+        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    
     MySource.use_custom_spectrum(filename)
 
     # Putting the spectrum at distance d (correcting flux and wavelength)
@@ -97,18 +106,18 @@ def visualise_lc(results):
 
 
 # Loops over all available SEDs for a particular model to produce light curve as seen through CASTOR at a given redshift
-def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, cadence = 1, start_time = 0, max_phase = 50):
+def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, cadence = 1.0, start_time = 0, max_phase = 50):
     results = pd.DataFrame(columns = ['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'time', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
     #MyBackground = config_background()
     #MyTelescope = config_telescope()
 
-    files = glob.glob('/Users/maximedeckers/Documents/RSE/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
-    phases = []
+    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    phases_ = []
     for f in files:
         #phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
-        phases.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
+        phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
 
-    #phases = np.arange(np.nanmin(phases_), np.nanmax(phases_), cadence)
+    phases = np.arange(float(np.nanmin(phases_)), float(np.nanmax(phases_)), float(cadence))
 
     for phase in phases:
         if phase < max_phase:

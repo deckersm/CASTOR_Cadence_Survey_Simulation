@@ -40,7 +40,7 @@ if __name__ == '__main__':
     max_z = float(sys.argv[2])
 
     if len(sys.argv) > 3:
-        cadence = sys_argv[3]
+        cadence = sys.argv[3]
     else:
         cadence = 1
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     MyBackground = utils.config_background();
 
     models = []
-    files = glob.glob('/Users/maximedeckers/Documents/RSE/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_*d.dat'.format(type, type))
+    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_*d.dat'.format(type, type))
     for f in files:
         models.append(f.split('/')[-1].split('_')[2])
 
@@ -59,8 +59,8 @@ if __name__ == '__main__':
 
     print('Finished simulating light curves, now running statistics \n')
     for band in ['uv', 'u', 'g']:
-        overview = stats.statistics(all_results, max_z, type, band = band)
-        overview.to_csv('results/statistics_{}_{}_{}.csv'.format(type, max_z, band), index = False)
+        overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence)
+        overview.to_csv('results/statistics_{}_{}_{}_{}d.csv'.format(type, max_z, band, cadence), index = False)
 
     end = time.time()
     print('Total run time for simulation = {} seconds'.format(end - start))

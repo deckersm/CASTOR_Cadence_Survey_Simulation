@@ -95,7 +95,7 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
 
 
 def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra=9.45, c_dec=-44.0, radius=1.75, num_cores=8, cadence = 1):
-    results_filename = f'results/results_{type}_{max_z}.csv'
+    results_filename = f'results/results_{type}_{max_z}_{cadence}d.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
 
     # Check if redshift array file exists, else create it

@@ -132,7 +132,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 
 
 
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', n_cores=8):
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, n_cores=8):
 
     # Check if redshift array file exists, else create it
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
@@ -148,7 +148,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         print(f"Generated and saved new redshift array to {redshift_filename}\n")
 
     # Load existing statistics if they exist
-    overview_file = 'results/statistics_{}_{}_{}.csv'.format(type, max_z, band)
+    overview_file = 'results/statistics_{}_{}_{}_{}d.csv'.format(type, max_z, band, cadence)
     if os.path.isfile(overview_file):
         overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     else:
