@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 # Function that produces a 2D surface in wavelength and phase space from existing spectral templates
-def create_2d_surface(type, model, plot = False):
+def create_2d_surface(type, model, cadence = 1.0, plot = False):
 
     # Finding all the spectral templates for this particular transient type and model
     files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
@@ -30,14 +30,12 @@ def create_2d_surface(type, model, plot = False):
     phases = phases[sorted_indices]
     fluxes = fluxes[sorted_indices, :]
 
-
     # Interpolate across both phases and wavelengths    
     interp_func = RectBivariateSpline(phases, wavelengths, fluxes)
 
-    # Interpolating to new 1-day phases and the original wavelength grid
-    fine_phases = np.arange(np.round(np.nanmin(phases), 0), np.round(np.nanmax(phases), 0), 1.0)
-    fine_wavelengths = wavelengths  # Can keep the wavelength grid or interpolate here too
-    # e.g. fine_wavelengths = np.arange(0, 10000, 100)
+    # Interpolating to new phases and the original wavelength grid (default assumes new cadence = 1.0 d)
+    fine_phases = np.arange(np.round(np.nanmin(phases), 0), np.round(np.nanmax(phases), 0), cadence)
+    fine_wavelengths = wavelengths  # Can keep the wavelength grid or interpolate here too e.g. fine_wavelengths = np.arange(0, 10000, 100)
 
     # Generate interpolated fluxes
     interpolated_fluxes = interp_func(fine_phases, fine_wavelengths)
@@ -81,7 +79,7 @@ def create_spec_at_phase(type, model, phase):
 
     # Finding the index of the required phase and extracting the spectrum at this phase
     index = np.where(phases == phase)[0][0]
-    spectrum = pd.DataFrame(data = {'lamb':wavelengths, 'flux':fluxes[index]})
+    spectrum = pd.DataFrame(data = {'#lamb':wavelengths, 'flux':fluxes[index]})
 
     return spectrum
 

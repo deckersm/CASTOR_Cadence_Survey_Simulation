@@ -9,18 +9,19 @@ from astropy.coordinates import SkyCoord
 from dustmaps.sfd import SFDQuery
 from astropy.cosmology import FlatLambdaCDM 
 
-
 # importing functions from other files
 import utils_castor as utils
 import rates_castor as rates
 
 
-
+# Function which extracts redshifts based on the volumetric rate of a particular transient type
+# Defaults assume the survey runs for 1 year and covers 20 deg^2 of the sky
 def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1, survey_area = 20):
     
     # Adding units to survey time
     survey_time = survey_time * u.yr
 
+    # Converting sky area to a fraction of the total sky
     fraction_sky = survey_area / 41253
     
     # Number of redshift bins
@@ -48,7 +49,7 @@ def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1,
     pdf = (dVdz * rate).value
     pdf /= np.sum(pdf)  # Normalize to get a proper probability distribution
     
-    # Sample redshifts according to the distribution
+    # Sample redshifts according to the probability distribution
     N_samples = int(N_total)  # Total number of transients to sample
     sampled_redshifts = np.random.choice(z_bins, size=N_samples, p=pdf)
 
@@ -56,7 +57,8 @@ def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1,
 
 
 
-# Function to pull an array of random ra and dec combination within the field to match the array of redshifts
+# Function to pull an array of random ra and dec combination within a specified radius of the center of a field to match the array of redshifts
+# Currently assumes field to be square, not circular but can easily be adapted 
 def ra_dec_samples(c_ra, c_dec, radius, number):
 
     ra = np.random.uniform(c_ra - radius, c_ra + radius, number)
@@ -64,7 +66,7 @@ def ra_dec_samples(c_ra, c_dec, radius, number):
 
     return ra, dec
 
-
+# Function to pull random start times for each transients from before the start of the survey (default = 30 d) until the end of the survey
 def time_samples(duration_survey, number, time_before_survey = 30):
     time_array = np.random.uniform(-time_before_survey, duration_survey, number)
     return time_array
@@ -75,6 +77,7 @@ def time_samples(duration_survey, number, time_before_survey = 30):
 #dustmaps.sfd.fetch()  # Ensure dust maps are fetched locally
 sfd = SFDQuery()  # This loads the SFD map
 
+# Function to extract Milky Way extinction along the line of sight of the transient 
 def mw_ebv(ra, dec):
     coords = SkyCoord(ra, dec, unit='deg', frame='icrs')
     ebv = sfd(coords)  # Reuse the preloaded sfd object
@@ -82,7 +85,7 @@ def mw_ebv(ra, dec):
     
 
 
-# Parallelized function for simulating light curves at a given redshift
+# Function the absorbs redshift, ra, dec, time, ebv, and outputs the model light curve
 def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground):
     z = redshift_array[i]
     ra, dec = ra_array[i], dec_array[i]
@@ -94,7 +97,10 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
     return results
 
 
-def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra=9.45, c_dec=-44.0, radius=1.75, num_cores=8, cadence = 1):
+# Function that iterates of the redshift array created and appends a light curve for each transient to the results file
+# This will check whether a results file already exists and continue where it last left off if some results were already produced
+# Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
+def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1):
     results_filename = f'results/results_{type}_{max_z}_{cadence}d.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
 
@@ -111,8 +117,10 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
         print(f"Generated and saved new redshift array to {redshift_filename}\n")
         print('Simulating a total of {} {} transients between z = 0.001 and z = {} \n'.format(len(redshift_array), type, max_z))
 
+    # Initialise processed_count and checks how many transients need to be generated
     processed_count = 0
     num_transients = len(redshift_array)
+    # Producing the ra, dec, and time arrays
     ra_array, dec_array = ra_dec_samples(c_ra, c_dec, radius, num_transients)
     time_array = time_samples(365, num_transients)
 
@@ -138,12 +146,13 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
         remaining_numbers = np.arange(0, num_transients, 1)
         print(f"No existing results found for {type} with maxz = {max_z}, starting fresh.\n")
 
-
+    # Iterating over the remaining_numbers (i.e. those that have not been previously processed)
     for number in remaining_numbers:
-
         try:
+            # Produce a light curve based on the input
             result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground)
             
+            # Append the light curve to the results file
             if len(all_results) != 0:
                 all_results = pd.concat([all_results, result])
             else:
@@ -156,6 +165,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
         except Exception as e:
             print(f"Error processing transient {number+1}: {e}\n")
             print()
+
     # Reset index and save the final results to a CSV
     all_results = all_results.reset_index(drop=True)
     all_results.to_csv(results_filename, index=False)

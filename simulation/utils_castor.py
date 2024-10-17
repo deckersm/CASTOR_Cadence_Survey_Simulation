@@ -39,12 +39,12 @@ def config_source(type, model, phase, z):
     # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
     if os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
         filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
-    elif os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
-        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    elif os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
+        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     else:
         spectrum = spec_interp.create_spec_at_phase(type, model, phase)
-        spectrum.to_csv('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase), index = False, encoding='utf-8', sep = ' ')
-        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+        spectrum.to_csv('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
+        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     
     MySource.use_custom_spectrum(filename)
 
@@ -55,12 +55,8 @@ def config_source(type, model, phase, z):
     d_cm = d * 3.086e+24 # converting Mpc to cm
     d_pc = d * 1e6 # converting Mpc to pc
 
-    #if type == 'snia' and model == 'hsiao':
-    #   MySource.spectrum = MySource.spectrum * 5e47 # Scaling the Hsiao spectrum to have a reasonable peak absolute magnitue
-    
-    # Correcting the flux for redshift 
+    # Correcting the flux for redshift and distance
     #MySource.spectrum = MySource.spectrum / (4 * math.pi * (d_pc**2)) / (1. + z)
-
     MySource.spectrum = MySource.spectrum * ((10**2)/(d_pc**2)) / (1. + z)
 
     # Correcting wavelength for redshift
@@ -80,7 +76,8 @@ def get_photometry(MyTelescope, MyBackground, MySource, ebv=0.01, time=100):
     
     MyPhot = Photometry(MyTelescope, MySource, MyBackground)
     MyPhot.use_optimal_aperture(quiet=True)
-    
+
+    # Extracts the magnitude of each spectrum and corresponding SNR -- assumes current planned exposure time of 100 s
     mags = np.array([MySource.get_AB_mag(MyTelescope)[band] for band in MyTelescope.passbands])
     snrs = np.array([MyPhot.calc_snr_or_t(t=time, reddening=ebv, quiet=True)[band] for band in MyTelescope.passbands])
     
@@ -96,7 +93,6 @@ def visualise_lc(results):
     for band in MyTelescope.passbands:
         ax.errorbar(results.loc[results['filter']==band, 'phase'], results.loc[results['filter']==band, 'mag'], yerr = results.loc[results['filter']==band, 'mag_err'], fmt = '.', linestyle = None, label = band, color = colours[c])
         c+=1
-
         
     ax.invert_yaxis()
     ax.set_xlabel('Time since explosion [d]')
@@ -108,18 +104,20 @@ def visualise_lc(results):
 
 # Loops over all available SEDs for a particular model to produce light curve as seen through CASTOR at a given redshift
 def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, cadence = 1.0, start_time = 0, max_phase = 50):
+    
+    # Initialising output dataframe which will contain light curve and transient info
     results = pd.DataFrame(columns = ['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'time', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
-    #MyBackground = config_background()
-    #MyTelescope = config_telescope()
 
+    # Finding all available spectra of this particular transient type and model and saving available phases
     files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
     phases_ = []
     for f in files:
-        #phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
         phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
 
+    # Producing array of desired phases depending on survey cadence
     phases = np.arange(float(np.nanmin(phases_)), float(np.nanmax(phases_)), float(cadence))
 
+    # Producing light curve for required phases
     for phase in phases:
         if phase < max_phase:
             MySource = config_source(type, model, phase, z)

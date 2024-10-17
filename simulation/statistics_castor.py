@@ -13,14 +13,7 @@ import rates_castor as rates
 import simulation_functions_castor as simul
 
 
-# Basic light curve detection condition
-def lc_detected_basic(lc, snr_lim = 5, n_det_above_snr = 2):
-    if len(lc.loc[lc['snr'] >= snr_lim]) >= n_det_above_snr:
-        return True
-    else:
-        return False
-
-# More detailed light curve detection condition 
+# Basic light curve detection condition, default conditions check whether there are a minimum of 2 detections with a SNR > 5
 def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
     if len(lc.loc[lc['snr'] >= snr_lim]) >= n_det_above_snr:
         return True
@@ -36,7 +29,8 @@ def mag_first_detection(lc, snr_lim = 5):
     index = np.where(lc['phase']==np.nanmin(lc.loc[lc['snr'] >= snr_lim, 'phase']))[0][0]
     return lc.loc[index, 'mag']
 
-# Currently just provides an estimate of peak mag but not reliable, need to fit models before FORECASTOR and extract
+# Function that fits polynomial around peak to extract the magnitude and time of peak
+# Relies on initial estimate of peak from just finding the brighest point in the light curve and fits polynomial 7 days either side of this
 def mag_at_peak(lc):
     est_t0 = lc['phase'][np.where(lc['mag']==np.nanmin(lc['mag']))[0][0]]
     lc_around_peak = lc.loc[(lc['phase'] < est_t0 + 7) & (lc['phase'] > est_t0 - 7)]
@@ -55,17 +49,18 @@ def mag_at_peak(lc):
     return peak_mag, t0
 
 
-# More detailed light curve detection condition 
+# More detailed light curve detection condition, adapt to individual needs
 def lc_detected_useful(lc, snr_lim = 5, n_det_above_snr = 3):
     peak_time = mag_at_peak(lc)[1]
     pre_peak_lc = lc.loc[lc['phase'] < peak_time]
 
+    # Checks how many detections pass SNR limit pre-peak, default requires 3 to pass 
     if len(pre_peak_lc.loc[pre_peak_lc['snr'] >= snr_lim]) >= n_det_above_snr:
         return True
     else:
         return False
 
-
+# Function to calculate absolute peak magnitude (default in g band) by taking into account redshift and Milky Way extinction
 def abs_peak_mag(mb, ebv, z, band = 'g', r_v = 3.1):
 
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
@@ -86,10 +81,11 @@ def abs_peak_mag(mb, ebv, z, band = 'g', r_v = 3.1):
 
 
 
-# Modified statistics function for parallel processing
+# Function to process each light curve and pass it to all the above statistics functions
 def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
     overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
 
+    # Locating a single light curve within the larger results file
     lc_all_filters = df.loc[(df['number'] == i)]
     lc_all_filters = lc_all_filters.reset_index(drop=True)
 
@@ -100,10 +96,14 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
         print(f'Processing statistics for light curve number {i}')
 
         try:
+            # Extracting key parameters for transient
             ra, dec, ebv, z, t, m = lc['ra'][0], lc['dec'][0], lc['ebv'][0], lc['z'][0], lc['type'][0], lc['model'][0]
+            
+            # Passing light curve to basic and more complex detection checks (checks detections in any filter at this point)
             det = lc_detected(lc_all_filters)
             det_useful = lc_detected_useful(lc_all_filters)
 
+            # If light curve has passed basic detection criteria, check all other statistics in specified filter
             if det:
                 try:
                     first_det = first_detection(lc)
@@ -121,6 +121,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
                 mag_peak, t0 = np.nan, np.nan
                 abs_mag_peak = np.nan
 
+            # Saving all detection statistics to overview file
             overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, first_det, t0, mag_peak, abs_mag_peak, mag_first_det]
 
         except Exception as e:
@@ -131,8 +132,9 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 
 
 
-
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, n_cores=8):
+# Function that iterates over the results file and passes each light curve to the process_light_curve function
+# Checks if statistics have previously been run for any of the light curves and if so, picks up where it left off
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0):
 
     # Check if redshift array file exists, else create it
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
@@ -154,6 +156,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
     else:
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     
+    # Checks how many transients we need to run, and how many have already been processed
     num_transients = len(redshift_array)
     numbers_total = np.arange(0, num_transients, 1)
     numbers_completed = list(set(overview['number']))
@@ -162,13 +165,16 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
     print(f'{len(numbers_completed)} already processed, processing remaining {len(numbers)} \n')
 
-
+    # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
     for number in numbers:
         result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
+        
+        # Appending results to overview file
         if len(overview) != 0:
             overview = pd.concat([overview, result])
         else:
             overview = result
+            
     # Save the final dataframe to CSV
     overview.to_csv(overview_file, index=False)
     return overview
