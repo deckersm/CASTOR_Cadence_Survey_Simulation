@@ -4,6 +4,7 @@ import math
 from matplotlib.colors import LogNorm
 import pandas as pd
 import glob
+import os
 
 from castor_etc.background import Background
 from castor_etc.photometry import Photometry

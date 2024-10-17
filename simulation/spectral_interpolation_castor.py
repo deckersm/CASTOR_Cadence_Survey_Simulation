@@ -12,7 +12,7 @@ from mpl_toolkits.mplot3d import Axes3D
 def create_2d_surface(type, model, plot = False):
 
     # Finding all the spectral templates for this particular transient type and model
-    files = glob.glob('/Users/maximedeckers/Documents/RSE/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
 
     # Saving all the fluxes and phases for this particular transient type and model
     phases, fluxes = [],[]
