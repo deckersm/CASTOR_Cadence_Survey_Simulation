@@ -10,6 +10,8 @@ import rates_castor as rates
 import simulation_functions_castor as simul
 import statistics_castor as stats
 
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+
 
 # To run this file, run the following command from the terminal:
 # python main.py <transient type> <maximum redshift> <survey cadence>
@@ -52,7 +54,7 @@ if __name__ == '__main__':
 
     # Extracting all available models from the spectral templates folder
     models = []
-    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_*d.dat'.format(type, type))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_*d.dat'.format(type, type))
     for f in files:
         models.append(f.split('/')[-1].split('_')[2])
     models = list(set(models))

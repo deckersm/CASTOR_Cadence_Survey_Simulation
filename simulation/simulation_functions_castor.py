@@ -164,7 +164,6 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
 
         except Exception as e:
             print(f"Error processing transient {number+1}: {e}\n")
-            print()
 
     # Reset index and save the final results to a CSV
     all_results = all_results.reset_index(drop=True)

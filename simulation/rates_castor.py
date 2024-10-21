@@ -6,6 +6,8 @@ from castor_etc.photometry import Photometry
 from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
 
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+
 
 # Star formation rate density function (Madau & Dickinson 2014) -- check for more up to date versions (2018>) check Graur (2017)
 def sfrd_madau_dickinson(z):
@@ -30,7 +32,7 @@ def snia_rate(z):
 
 # Function returning the CC volumetric rate at each redshift taken from Strolger (2015) - from a fit to fig. 6 in this paper -> adopted from plasticc code
 def cc_rate(z):
-    strolger = pd.DataFrame(pd.read_csv('../Rates/strolger2015_cc_rate.csv'))
+    strolger = pd.DataFrame(pd.read_csv(filepath_to_castor_folder + 'Rates/strolger2015_cc_rate.csv'))
     rates = []
     for i in range(len(z)):
         try:

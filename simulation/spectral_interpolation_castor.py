@@ -7,12 +7,14 @@ from scipy.interpolate import interp1d
 from scipy.interpolate import RectBivariateSpline
 from mpl_toolkits.mplot3d import Axes3D
 
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+
 
 # Function that produces a 2D surface in wavelength and phase space from existing spectral templates
 def create_2d_surface(type, model, cadence = 1.0, plot = False):
 
     # Finding all the spectral templates for this particular transient type and model
-    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
 
     # Saving all the fluxes and phases for this particular transient type and model
     phases, fluxes = [],[]

@@ -13,6 +13,9 @@ from castor_etc.telescope import Telescope
 
 import spectral_interpolation_castor as spec_interp
 
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+
+
 ######################################################################################################################################################################################
 #### #### #### #### ####                         Functions to set up the telescope, background, and source objects.                                                #### #### #### #### 
 ######################################################################################################################################################################################
@@ -37,14 +40,14 @@ def config_source(type, model, phase, z):
     MySource = PointSource()
 
     # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
-    if os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
-        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
-    elif os.path.isfile('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
-        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
+    if os.path.isfile(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
+        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    elif os.path.isfile(filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
+        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     else:
         spectrum = spec_interp.create_spec_at_phase(type, model, phase)
-        spectrum.to_csv('/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
-        filename = '/users/deckersm/CASTOR/Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
+        spectrum.to_csv(filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
+        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     
     MySource.use_custom_spectrum(filename)
 
@@ -109,13 +112,13 @@ def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, c
     results = pd.DataFrame(columns = ['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'time', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
 
     # Finding all available spectra of this particular transient type and model and saving available phases
-    files = glob.glob('/users/deckersm/CASTOR/Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
     phases_ = []
     for f in files:
         phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
 
     # Producing array of desired phases depending on survey cadence
-    phases = np.arange(float(np.nanmin(phases_)), float(np.nanmax(phases_)), float(cadence))
+    phases = np.arange(np.round(np.nanmin(phases_), 0), np.round(np.nanmax(phases_), 0), float(cadence))
 
     # Producing light curve for required phases
     for phase in phases:
