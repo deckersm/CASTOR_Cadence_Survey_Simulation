@@ -1,7 +1,7 @@
 # CASTOR_Cadence_Survey_Simulation
 
 ## Description
-This software simulates transients for the CASTOR Cadence Survey: A Wide-Field UV Time Domain Survey (https://www.castormission.org/). This software relies on the usage of FORECASTOR ETC (https://github.com/CASTOR-telescope/ETC) to determine the SNR of each spectrum at a given redshift. 
+This package simulates transients for the CASTOR Cadence Survey: A Wide-Field UV Time Domain Survey (https://www.castormission.org/) and relies on the usage of FORECASTOR ETC (https://github.com/CASTOR-telescope/ETC) to determine the SNR of each spectrum at a given redshift. 
 
 
 
@@ -20,7 +20,7 @@ pip install -r requirements.txt
 ## Usage
 To run a simulation, make sure a `results` folder is set up inside the `simulation` folder and run the following command:
 
-python main.py <transient_type> <max_redshift> <survey_cadence (integer multiples of 1)>
+python main.py <transient_type> <max_redshift> <survey_cadence>
 
 This will produce several output files in the `results` folder:
 
