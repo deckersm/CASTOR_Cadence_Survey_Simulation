@@ -21,40 +21,42 @@ def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1,
     # Adding units to survey time
     survey_time = survey_time * u.yr
 
-    # Converting sky area to a fraction of the total sky
+    # Convert sky area to a fraction of the total sky (41253 deg² in total)
     fraction_sky = survey_area / 41253
-    
+
     # Number of redshift bins
     z_bins = np.linspace(z_min, z_max, 1000)
 
-    # Extracting rate depending on type of transient and adding units
-    rate = rates.transient_rate(type, z_bins)
+    # Extract the transient rate for the type, converting units to Mpc^-3 yr^-1
+    rate = transient_rate(type, z_bins)
     rate = rate * u.Mpc**(-3) * u.yr**(-1)
 
-    # Calculate the comoving volume element dV/dz (Mpc^3/sr) for each redshift bin
+    # Calculate the comoving volume element dV/dz (Mpc³/sr) for each redshift bin
     cosmo = FlatLambdaCDM(H0=70, Om0=0.3)
-    dVdz = cosmo.differential_comoving_volume(z_bins)  # Mpc^3/sr
-    
-    # Multiply by 4π (the whole sky in steradians) and the sky fraction to get the comoving volume over the survey area
-    dVdz_survey = dVdz * 4 * np.pi * fraction_sky  # Mpc^3 for the fraction of the sky
-    
-    # Integrate to find the total comoving volume surveyed up to z_max, weighted by the rate
-    total_volume = np.trapz(dVdz_survey * rate, z_bins)  # Mpc^3 * yr^-1
-    
-    # Calculate total number of transients over the survey period (N_total is now a scalar)
-    N_total = (total_volume * survey_time).decompose()  # Dimensionless (just a number of transients)
-    N_total = N_total.value  # Get rid of any remaining units, making N_total a scalar
+    dVdz = cosmo.differential_comoving_volume(z_bins)  # Mpc³/sr
 
-    # Probability distribution proportional to dV/dz
-    pdf = (dVdz * rate).value
+    # Multiply by 4π steradians and the sky fraction to get comoving volume over the survey area
+    dVdz_survey = dVdz * 4 * np.pi * fraction_sky  # Mpc³
+
+    # Apply time dilation correction to the survey time in each redshift bin
+    # Effective survey time in each bin is scaled by (1 + z)
+    time_dilation = survey_time / (1 + z_bins)
+
+    # Integrate to find the total comoving volume surveyed up to z_max, weighted by the rate
+    total_volume = np.trapz(dVdz_survey * rate * time_dilation, z_bins)  # Mpc³ * yr^-1
+
+    # Calculate the total number of transients over the survey period
+    N_total = total_volume.decompose().value  # Dimensionless (total number of transients)
+
+    # Probability distribution proportional to dV/dz * rate, normalized to 1
+    pdf = (dVdz * rate * time_dilation).value
     pdf /= np.sum(pdf)  # Normalize to get a proper probability distribution
-    
+
     # Sample redshifts according to the probability distribution
     N_samples = int(N_total)  # Total number of transients to sample
     sampled_redshifts = np.random.choice(z_bins, size=N_samples, p=pdf)
 
     return sampled_redshifts
-
 
 
 # Function to pull an array of random ra and dec combination within a specified radius of the center of a field to match the array of redshifts
