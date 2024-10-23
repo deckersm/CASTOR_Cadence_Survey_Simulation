@@ -28,6 +28,9 @@ This will produce several output files in the `results` folder:
 - A `results_<transient_type>_<max_redshift>.csv` file which contains the light curves of all the transients simulated.
 - a `statistics_<transient_type>_<max_redshift>_<filter>.csv` file which contains the detection statistics for all the generated transients in a particular filter.
 
+Detailed descriptions of the contents of the latter two files are available in `docs/file_descriptors.txt`. 
+
+
 ## Configuration
 - The software is currently set up to run a simulation based on the CASTOR survey parameters, these can be changed to simulate other surveys. To change the telescope parameters, we point the user to the FORECASTOR ETC (https://github.com/CASTOR-telescope/ETC) for further details. These can then be directly implemented in the `config_telescope()` function in `utils.py` file where all the FORECASTOR ETC functions are called.
 - The current version includes templates for: SNe Ia, II, Ibc, Iax, 91bg, SLSNe, and TDEs, but other classes of transients can be added by the user given that the spectral templates have sufficient wavelength coverage (1000 \AA -- 10 000 \AA). Transient templates should be stored in the `/Templates/` folder and follow the naming convention `SED_{type}_{model}_{phase}.dat`. The template library should be representative of the intrinsic transient population (e.g. in terms of the luminosity distribution for most transient classes). 
