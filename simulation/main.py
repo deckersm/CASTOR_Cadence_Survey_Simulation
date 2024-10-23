@@ -3,6 +3,7 @@ import glob
 import sys
 import os
 import time
+import argparse
 
 # importing functions from other files
 import utils_castor as utils
@@ -10,7 +11,9 @@ import rates_castor as rates
 import simulation_functions_castor as simul
 import statistics_castor as stats
 
-filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+
+#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 # To run this file, run the following command from the terminal:
@@ -38,6 +41,21 @@ if __name__ == '__main__':
     # Count how long simulation takes to run
     start = time.time()
 
+    parser = argparse.ArgumentParser(description='Code to simulate CASTOR transient survey')
+
+    parser.add_argument('--type', '-t', help='Type of transient')
+    parser.add_argument('--max_redshift', '-z', help='Maximum redshift to simulate transients out to')
+    parser.add_argument('--cadence', '-c', help='Cadence of survey')
+    parser.add_argument('--exposure', '-e', help='Exposure time of each visit of survey')
+
+    args = parser.parse_args()
+    type = args.type
+    max_z = float(args.max_redshift)
+    cadence = float(args.cadence)
+    exposure = float(args.exposure)
+
+
+    """
     # Extracts the transient type, maximum redshift, and survey cadence from the terminal input
     type = sys.argv[1]
     max_z = float(sys.argv[2])
@@ -48,25 +66,31 @@ if __name__ == '__main__':
     else:
         cadence = 1.0
 
+    # If no exposure time per is specified, it is assumed to be 100 s (as per the phase 0 science report)
+    if len(sys.argv) > 4:
+        exposure = sys.argv[4]
+    else:
+        exposure = 100
+    """
+
     # Globally defining background and telescope as these won't change between transients
     MyTelescope = utils.config_telescope();
     MyBackground = utils.config_background();
 
     # Extracting all available models from the spectral templates folder
     models = []
-    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_*d.dat'.format(type, type))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_*d.dat'.format(type, type))
     for f in files:
         models.append(f.split('/')[-1].split('_')[2])
     models = list(set(models))
-    
     # Populating the redshift range with the transients, extracting the light curves as they would be seen by CASTOR
-    all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence)
+    all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure)
 
     # Running detection statistics in the three CASTOR filters
     print('Finished simulating light curves, now running statistics \n')
     for band in ['uv', 'u', 'g']:
-        overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence)
-        overview.to_csv('results/statistics_{}_{}_{}_{}d.csv'.format(type, max_z, band, cadence), index = False)
+        overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
+        overview.to_csv('results/statistics_{}_{}_{}_{}d_{}s.csv'.format(type, max_z, band, cadence, exposure), index = False)
 
     end = time.time()
     print('Total run time for simulation = {} seconds'.format(end - start))

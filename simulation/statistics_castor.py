@@ -134,7 +134,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 
 # Function that iterates over the results file and passes each light curve to the process_light_curve function
 # Checks if statistics have previously been run for any of the light curves and if so, picks up where it left off
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0):
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100):
 
     # Check if redshift array file exists, else create it
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
@@ -150,7 +150,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         print(f"Generated and saved new redshift array to {redshift_filename}\n")
 
     # Load existing statistics if they exist
-    overview_file = 'results/statistics_{}_{}_{}_{}d.csv'.format(type, max_z, band, cadence)
+    overview_file = 'results/statistics_{}_{}_{}_{}d_{}s.csv'.format(type, max_z, band, cadence, exposure)
     if os.path.isfile(overview_file):
         overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     else:
@@ -174,7 +174,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
             overview = pd.concat([overview, result])
         else:
             overview = result
-            
+
     # Save the final dataframe to CSV
     overview.to_csv(overview_file, index=False)
     return overview

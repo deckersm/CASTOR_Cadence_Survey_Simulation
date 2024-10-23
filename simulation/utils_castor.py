@@ -13,7 +13,8 @@ from castor_etc.telescope import Telescope
 
 import spectral_interpolation_castor as spec_interp
 
-filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 ######################################################################################################################################################################################
@@ -40,14 +41,14 @@ def config_source(type, model, phase, z):
     MySource = PointSource()
 
     # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
-    if os.path.isfile(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
-        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
-    elif os.path.isfile(filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
-        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
+    if os.path.isfile(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
+        filename = filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
+    elif os.path.isfile(filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
+        filename = filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     else:
         spectrum = spec_interp.create_spec_at_phase(type, model, phase)
-        spectrum.to_csv(filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
-        filename = filepath_to_castor_folder + 'Templates/individual_spectral_templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
+        spectrum.to_csv(filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
+        filename = filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
     
     MySource.use_custom_spectrum(filename)
 
@@ -75,14 +76,14 @@ def config_source(type, model, phase, z):
 
 # Perform photometry on source in CASTOR filters and return apparent mag and SNR from given exposure time
 # Vectorized get_photometry
-def get_photometry(MyTelescope, MyBackground, MySource, ebv=0.01, time=100):
+def get_photometry(MyTelescope, MyBackground, MySource, ebv=0.01, exposure=100):
     
     MyPhot = Photometry(MyTelescope, MySource, MyBackground)
     MyPhot.use_optimal_aperture(quiet=True)
 
-    # Extracts the magnitude of each spectrum and corresponding SNR -- assumes current planned exposure time of 100 s
+    # Extracts the magnitude of each spectrum and corresponding SNR, incorporates given exposure time and milky way extinction along the line of sight
     mags = np.array([MySource.get_AB_mag(MyTelescope)[band] for band in MyTelescope.passbands])
-    snrs = np.array([MyPhot.calc_snr_or_t(t=time, reddening=ebv, quiet=True)[band] for band in MyTelescope.passbands])
+    snrs = np.array([MyPhot.calc_snr_or_t(t=exposure, reddening=ebv, quiet=True)[band] for band in MyTelescope.passbands])
     
     return MyTelescope.passbands, mags, snrs
 
@@ -106,13 +107,13 @@ def visualise_lc(results):
 
 
 # Loops over all available SEDs for a particular model to produce light curve as seen through CASTOR at a given redshift
-def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, cadence = 1.0, start_time = 0, max_phase = 50):
+def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, cadence = 1.0, exposure = 100, start_time = 0, max_phase = 50):
     
     # Initialising output dataframe which will contain light curve and transient info
     results = pd.DataFrame(columns = ['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'time', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
 
     # Finding all available spectra of this particular transient type and model and saving available phases
-    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
     phases_ = []
     for f in files:
         phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
@@ -124,7 +125,7 @@ def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, c
     for phase in phases:
         if phase < max_phase:
             MySource = config_source(type, model, phase, z)
-            filters, mags, snrs = get_photometry(MyTelescope, MyBackground, MySource, ebv)
+            filters, mags, snrs = get_photometry(MyTelescope, MyBackground, MySource, ebv, exposure)
             
             for i in range(len(filters)):
                 if snrs[i]!=0:

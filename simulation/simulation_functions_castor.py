@@ -28,7 +28,7 @@ def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 1,
     z_bins = np.linspace(z_min, z_max, 1000)
 
     # Extract the transient rate for the type, converting units to Mpc^-3 yr^-1
-    rate = transient_rate(type, z_bins)
+    rate = rates.transient_rate(type, z_bins)
     rate = rate * u.Mpc**(-3) * u.yr**(-1)
 
     # Calculate the comoving volume element dV/dz (Mpc³/sr) for each redshift bin
@@ -88,22 +88,22 @@ def mw_ebv(ra, dec):
 
 
 # Function the absorbs redshift, ra, dec, time, ebv, and outputs the model light curve
-def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground):
+def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground):
     z = redshift_array[i]
     ra, dec = ra_array[i], dec_array[i]
     time = time_array[i]
 
     ebv = mw_ebv(ra, dec)  # Calculate extinction at this RA and Dec
     model = models[int(np.random.uniform(0, len(models), 1))]
-    results = utils.create_lc(type, model, z, ra, dec, ebv, i, MyTelescope, MyBackground, start_time = time, cadence = cadence)
+    results = utils.create_lc(type, model, z, ra, dec, ebv, i, MyTelescope, MyBackground, start_time = time, cadence = cadence, exposure = exposure)
     return results
 
 
 # Function that iterates of the redshift array created and appends a light curve for each transient to the results file
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
-def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1):
-    results_filename = f'results/results_{type}_{max_z}_{cadence}d.csv'
+def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1, exposure = 100):
+    results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
 
     # Check if redshift array file exists, else create it
@@ -152,7 +152,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, c_ra
     for number in remaining_numbers:
         try:
             # Produce a light curve based on the input
-            result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, MyTelescope, MyBackground)
+            result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground)
             
             # Append the light curve to the results file
             if len(all_results) != 0:
