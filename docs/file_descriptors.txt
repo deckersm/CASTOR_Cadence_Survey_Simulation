@@ -1,0 +1,42 @@
+File descriptors
+------------------------------------------------------------------------------------------------------------------------
+
+Filename: results_<transient_type>_<max_redshift>.csv 
+
+Description: File containing all of the simulated light curves as they would be observed by CASTOR
+
+Columns:
+1. number = Each of the light curves is numbered so they can easily be isolated for any analysis
+2. type = The transient type
+3. model = The model name of the transient 
+4. z = Redshift
+5. phase = For SNe Ia, 91bg, Iax, SNe II, SNe Ib/c this is the number of days since the peak in the g-band. For SLSNe and TDEs this is the numner of days since 			explosion
+6. filter = CASTOR filter 
+7. mag = AB magnitude
+8. mag_err = Uncertainty on AB magnitude
+9. snr = signal to noise ratio of detection
+
+
+------------------------------------------------------------------------------------------------------------------------
+
+Filename: statistics_<transient_type>_<max_redshift>_<filter>.csv
+
+Description: File summarising the detection statistics of each light curve simulated
+
+Columns:
+1. number = Each of the light curves is numbered so they can easily be isolated for any analysis
+2. type = The transient type
+3. model = The model name of the transient 
+4. z = Redshift
+5. ra = RA of transient
+6. dec = DEC of transient
+7. ebv = Milky way extinction along the line of sight of the transient, computed using the Schlafly & Finkbeiner (2011) dustmaps
+8. detected = True if light curve has 2 or more data points with SNR > 5 (in any band)
+9. detected_useful = True if light curve has 3 or more data points pre-peak with SNR > 5 (in any band)
+10. phase_detected = Phase of first detection with SNR > 5 in band specified in filename
+11. t0 = Fitted time of maximum light in band specified in filename
+12. mag_peak = Apparent magnitude at peak in band specified in filename
+13. abs_mag_peak = Absolute magnitude at peak in band specified in filename
+14. mag_detect = Apparent magnitude of first detection with SNR > 5 in band specified in filename
+
+------------------------------------------------------------------------------------------------------------------------
