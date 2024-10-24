@@ -119,7 +119,8 @@ def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, c
         phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))
 
     # Producing array of desired phases depending on survey cadence
-    phases = np.arange(np.round(np.nanmin(phases_), 0), np.round(np.nanmax(phases_), 0), float(cadence))
+    # Making sure this cadence is in the observed frame rather than the rest frame
+    phases = np.arange(np.round(np.nanmin(phases_), 0), np.round(np.nanmax(phases_), 0), float(cadence) / (1 + z))
 
     # Producing light curve for required phases
     for phase in phases:

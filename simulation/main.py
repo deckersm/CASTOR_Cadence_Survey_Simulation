@@ -49,29 +49,11 @@ if __name__ == '__main__':
     parser.add_argument('--exposure', '-e', help='Exposure time of each visit of survey')
 
     args = parser.parse_args()
+    
     type = args.type
     max_z = float(args.max_redshift)
     cadence = float(args.cadence)
     exposure = float(args.exposure)
-
-
-    """
-    # Extracts the transient type, maximum redshift, and survey cadence from the terminal input
-    type = sys.argv[1]
-    max_z = float(sys.argv[2])
-
-    # If no survey cadence is specified, it is assumed to be 1.0 d
-    if len(sys.argv) > 3:
-        cadence = sys.argv[3]
-    else:
-        cadence = 1.0
-
-    # If no exposure time per is specified, it is assumed to be 100 s (as per the phase 0 science report)
-    if len(sys.argv) > 4:
-        exposure = sys.argv[4]
-    else:
-        exposure = 100
-    """
 
     # Globally defining background and telescope as these won't change between transients
     MyTelescope = utils.config_telescope();
