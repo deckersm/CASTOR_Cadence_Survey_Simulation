@@ -20,7 +20,21 @@ pip install -r requirements.txt
 ## Usage
 To run a simulation, make sure a `results` folder is set up inside the `simulation` folder and run the following command:
 
-python main.py <transient_type> <max_redshift> <survey_cadence>
+python main.py <<arguments>>
+
+Required arguments:
+
+--type, -t = transient type
+
+--max_redshift, -z = maximum redshift out to which transients are simulated
+
+
+Optional arguments:
+
+--cadence, -c = cadence of transients survey, default = 1.0 d
+
+--exposure, -e = exposure time of each visit, default = 100 s
+
 
 This will produce several output files in the `results` folder:
 
