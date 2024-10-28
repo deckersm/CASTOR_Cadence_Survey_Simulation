@@ -134,10 +134,16 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 
 # Function that iterates over the results file and passes each light curve to the process_light_curve function
 # Checks if statistics have previously been run for any of the light curves and if so, picks up where it left off
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100):
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100, c_ra=9.45, c_dec=-44.0, test = False, number_redshifts = 10):
 
     # Check if redshift array file exists, else create it
-    redshift_filename = f'results/redshift_array_{type}_{max_z}.npy'
+    redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
+    # Load existing statistics if they exist
+    overview_file = f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s.csv'
+
+    if test == True:
+        redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}_{number_redshifts}_test.npy'
+        overview_file = f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{number_redshifts}_test.csv'
 
     if os.path.exists(redshift_filename):
         redshift_array = np.load(redshift_filename)
@@ -145,35 +151,44 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
     else:
         # Create a new redshift array and save it for consistency
-        redshift_array = simul.redshift_samples(type = type, z_max = max_z)
-        np.save(redshift_filename, redshift_array)
-        print(f"Generated and saved new redshift array to {redshift_filename}\n")
+        #redshift_array = simul.redshift_samples(type = type, z_max = max_z)
+        #np.save(redshift_filename, redshift_array)
+        print(f"Cannot find {redshift_filename}, likely light curves have not been simulated with these survey parameters. \n")
 
-    # Load existing statistics if they exist
-    overview_file = 'results/statistics_{}_{}_{}_{}d_{}s.csv'.format(type, max_z, band, cadence, exposure)
     if os.path.isfile(overview_file):
         overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     else:
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     
-    # Checks how many transients we need to run, and how many have already been processed
-    num_transients = len(redshift_array)
-    numbers_total = np.arange(0, num_transients, 1)
-    numbers_completed = list(set(overview['number']))
+    if test == False:
+        # Checks how many transients we need to run, and how many have already been processed
+        num_transients = len(redshift_array)
+        numbers_total = np.arange(0, num_transients, 1)
+        numbers_completed = list(set(overview['number']))
 
-    numbers = list(set(numbers_total) - set(numbers_completed))
+        numbers = list(set(numbers_total) - set(numbers_completed))
 
-    print(f'{len(numbers_completed)} already processed, processing remaining {len(numbers)} \n')
+        print(f'{len(numbers_completed)} already processed, processing remaining {len(numbers)} \n')
 
-    # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
-    for number in numbers:
-        result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
-        
-        # Appending results to overview file
-        if len(overview) != 0:
-            overview = pd.concat([overview, result])
-        else:
-            overview = result
+        # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
+        for number in numbers:
+            result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
+            
+            # Appending results to overview file
+            if len(overview) != 0:
+                overview = pd.concat([overview, result])
+            else:
+                overview = result
+    else:
+         # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
+        for number in list(set(df['number'])):
+            result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
+            
+            # Appending results to overview file
+            if len(overview) != 0:
+                overview = pd.concat([overview, result])
+            else:
+                overview = result
 
     # Save the final dataframe to CSV
     overview.to_csv(overview_file, index=False)

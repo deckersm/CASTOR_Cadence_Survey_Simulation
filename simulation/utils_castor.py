@@ -13,7 +13,7 @@ from castor_etc.telescope import Telescope
 
 import spectral_interpolation_castor as spec_interp
 
-#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
 filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 

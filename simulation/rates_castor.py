@@ -6,7 +6,7 @@ from castor_etc.photometry import Photometry
 from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
 
-#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
 filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 

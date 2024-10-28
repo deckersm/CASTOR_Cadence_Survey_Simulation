@@ -7,15 +7,15 @@ from scipy.interpolate import interp1d
 from scipy.interpolate import RectBivariateSpline
 from mpl_toolkits.mplot3d import Axes3D
 
-#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
 filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 # Function that produces a 2D surface in wavelength and phase space from existing spectral templates
-def create_2d_surface(type, model, cadence = 1.0, plot = False):
+def create_2d_surface(type, model, cadence = 0.1, plot = False):
 
     # Finding all the spectral templates for this particular transient type and model
-    files = glob.glob(filepath_to_castor_folder + 'Templates/individual_spectral_templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
 
     # Saving all the fluxes and phases for this particular transient type and model
     phases, fluxes = [],[]
@@ -38,6 +38,7 @@ def create_2d_surface(type, model, cadence = 1.0, plot = False):
 
     # Interpolating to new phases and the original wavelength grid (default assumes new cadence = 1.0 d)
     fine_phases = np.arange(np.round(np.nanmin(phases), 0), np.round(np.nanmax(phases), 0), cadence)
+    fine_phases = np.round(fine_phases, 1)
     fine_wavelengths = wavelengths  # Can keep the wavelength grid or interpolate here too e.g. fine_wavelengths = np.arange(0, 10000, 100)
 
     # Generate interpolated fluxes
@@ -81,7 +82,7 @@ def create_spec_at_phase(type, model, phase):
     phases, wavelengths, fluxes = create_2d_surface(type, model)
 
     # Finding the index of the required phase and extracting the spectrum at this phase
-    index = np.where(phases == phase)[0][0]
+    index = np.where(list(phases) == np.round(phase, 1))[0][0]
     spectrum = pd.DataFrame(data = {'#lamb':wavelengths, 'flux':fluxes[index]})
 
     return spectrum
