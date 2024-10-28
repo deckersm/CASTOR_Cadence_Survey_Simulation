@@ -35,6 +35,17 @@ Optional arguments:
 
 --exposure, -e = exposure time of each visit, default = 100 s
 
+'--length_survey', '-l' = duration of the survey in days, default = 182 d
+
+--simul_type, -s = 'full' runs complete simulation with transients injected according to their volumetric rate, 'test' runs a small test survey just to extract detection efficiencies as a function of redshift. Default = 'full'
+
+--number_redshifts = the number of redshifts samples to populate between min_z and max_z if a 'test' simulation is ran. Default = 10
+
+--min_redshift, --min_z = minimum redshift to injecting transients at - only used for 'test' simulations, default = 0.01.
+
+--field_ra, -r (--field_dec, -d) = ra and dec (in deg) of the center of the fields covered by the survey, if multiple, separate with spaces.
+
+
 
 This will produce several output files in the `results` folder:
 
