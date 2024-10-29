@@ -24,26 +24,26 @@ python main.py <<arguments>>
 
 Required arguments:
 
---type, -t = transient type
+`--type`, `-t` = transient type
 
---max_redshift, -z = maximum redshift out to which transients are simulated
+`--max_redshift`, `-z` = maximum redshift out to which transients are simulated
 
 
 Optional arguments:
 
---cadence, -c = cadence of transients survey (default = 1.0 d).
+`--cadence`, `-c` = cadence of transients survey (default = 1.0 d).
 
---exposure, -e = exposure time of each visit (default = 100 s).
+`--exposure`, `-e` = exposure time of each visit (default = 100 s).
 
---length_survey, -l = duration of the survey in days (default = 182.625 d).
+`--length_survey`, `-l` = duration of the survey in days (default = 182.625 d).
 
---simul_type, -s = 'full' runs a complete simulation with transients injected according to their volumetric rate, 'test' runs a small test survey just to extract detection efficiencies as a function of redshift (default = 'full').
+`--simul_type`, `-s` = 'full' runs a complete simulation with transients injected according to their volumetric rate, 'test' runs a small test survey just to extract detection efficiencies as a function of redshift (default = 'full').
 
---number_redshifts = the number of redshifts samples to populate between min_z and max_z if a 'test' simulation is ran (default = 10).
+`--number_redshifts` = the number of redshifts samples to populate between min_z and max_z if a 'test' simulation is ran (default = 10).
 
---min_redshift, --min_z = minimum redshift to injecting transients at - only used for 'test' simulations (default = 0.01).
+`--min_redshift`, `--min_z` = minimum redshift to injecting transients at - only used for 'test' simulations (default = 0.01).
 
---field_ra, -r (--field_dec, -d) = ra and dec (in deg) of the center of the fields covered by the survey, if multiple, separate with spaces.
+`--field_ra`, `-r` (`--field_dec`, `-d`) = ra and dec (in deg) of the center of the fields covered by the survey, if multiple, separate with spaces.
 
 
 
