@@ -31,17 +31,17 @@ Required arguments:
 
 Optional arguments:
 
---cadence, -c = cadence of transients survey, default = 1.0 d
+--cadence, -c = cadence of transients survey (default = 1.0 d).
 
---exposure, -e = exposure time of each visit, default = 100 s
+--exposure, -e = exposure time of each visit (default = 100 s).
 
---length_survey, -l = duration of the survey in days, default = 182 d
+--length_survey, -l = duration of the survey in days (default = 182.625 d).
 
---simul_type, -s = 'full' runs a complete simulation with transients injected according to their volumetric rate, 'test' runs a small test survey just to extract detection efficiencies as a function of redshift. Default = 'full'
+--simul_type, -s = 'full' runs a complete simulation with transients injected according to their volumetric rate, 'test' runs a small test survey just to extract detection efficiencies as a function of redshift (default = 'full').
 
---number_redshifts = the number of redshifts samples to populate between min_z and max_z if a 'test' simulation is ran. Default = 10
+--number_redshifts = the number of redshifts samples to populate between min_z and max_z if a 'test' simulation is ran (default = 10).
 
---min_redshift, --min_z = minimum redshift to injecting transients at - only used for 'test' simulations, default = 0.01.
+--min_redshift, --min_z = minimum redshift to injecting transients at - only used for 'test' simulations (default = 0.01).
 
 --field_ra, -r (--field_dec, -d) = ra and dec (in deg) of the center of the fields covered by the survey, if multiple, separate with spaces.
 
@@ -49,7 +49,7 @@ Optional arguments:
 
 This will produce several output files in the `results` folder:
 
-- A `redshift_array_<transient_type>__<max_redshift>.npy` file which contains the redshifts of the transients simulated .
+- A `redshift_array_<transient_type>__<max_redshift>.npy` file which contains the redshifts of the transients simulated.
 - A `results_<transient_type>_<max_redshift>.csv` file which contains the light curves of all the transients simulated.
 - a `statistics_<transient_type>_<max_redshift>_<filter>.csv` file which contains the detection statistics for all the generated transients in a particular filter.
 
