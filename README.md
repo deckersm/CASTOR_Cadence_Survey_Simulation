@@ -49,9 +49,11 @@ Optional arguments:
 
 This will produce several output files in the `results` folder:
 
-- A `redshift_array_<transient_type>__<max_redshift>.npy` file which contains the redshifts of the transients simulated.
+- A `redshift_array_<transient_type>__<max_redshift>.npy` file which contains the redshifts of the transients simulated .
 - A `results_<transient_type>_<max_redshift>.csv` file which contains the light curves of all the transients simulated.
 - a `statistics_<transient_type>_<max_redshift>_<filter>.csv` file which contains the detection statistics for all the generated transients in a particular filter.
+
+- if a 'test' version of the simulation is ran these filenames will have an additional 'test' suffix
 
 Detailed descriptions of the contents of the latter two files are available in `docs/file_descriptors.txt`. 
 
