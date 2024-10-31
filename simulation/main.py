@@ -13,8 +13,8 @@ import simulation_functions_castor as simul
 import statistics_castor as stats
 
 
-#filepath_to_castor_folder = '/users/deckersm/CASTOR/'
-filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+#filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 # To run this file, run the following command from the terminal:
@@ -47,6 +47,8 @@ if __name__ == '__main__':
 
     # Count how long simulation takes to run
     start = time.time()
+
+    # Saving arguments from the command line
 
     parser = argparse.ArgumentParser(description='Code to simulate CASTOR transient survey')
 
@@ -91,12 +93,17 @@ if __name__ == '__main__':
     if args.length_survey != None:
         length_survey = args.length_survey
     else:
-        length_survey = 182.0
+        length_survey = 182.625
 
     if args.number_redshifts != None:
         number_redshifts = args.number_redshifts
     else:
         number_redshifts = 10
+
+    if args.simul_type != None:
+        simul_type = args.simul_type
+    else:
+        simul_type = 'full'
 
     ra_array = args.field_ra
     dec_array = args.field_dec
@@ -112,24 +119,30 @@ if __name__ == '__main__':
         models.append(f.split('/')[-1].split('_')[2])
     models = list(set(models))
 
-    if args.simul_type == 'full':
+    if simul_type == 'full':
 
         # If no coordinates for the fields are provided, then run simulation on the four LSST deep drilling fields
         if ra_array == None:
+            
             centers = {
                 "ELAIS_S1": (9.45, -44.0),
                 "XMM_LSS": (35.708, -4.75),
                 "Extended_Chandra": (53.125, -28.1),
                 "COSMOS": (150.1, 2.182)
             }
-
+            count = 0
             for field_name, (ra_center, dec_center) in centers.items():        
                 # Populating the redshift range with the transients, extracting the light curves as they would be seen by CASTOR
-                all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182, c_ra = ra_center, c_dec = dec_center)
-
+                # Starting the survey on two fields visible for 6 months, then switch to the second two visible fields
+                if count < 2:
+                    all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 0)
+                else:
+                    all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 182.625)
+                count += 1
+        # Otherwise if fields are provided, loop through the provided fields
         else:
             for ra_center, dec_center in zip(ra_array, dec_array):
-                all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182, c_ra = ra_center, c_dec = dec_center)
+                all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center)
 
         # Running detection statistics in the three CASTOR filters
         print('Finished simulating light curves, now running statistics \n')
@@ -137,7 +150,7 @@ if __name__ == '__main__':
             overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
             overview.to_csv('results/statistics_{}_{}_{}_{}d_{}s.csv'.format(type, max_z, band, cadence, exposure, c_ra = ra_center, c_dec = dec_center), index = False)
 
-    elif args.simul_type == 'test':
+    elif simul_type == 'test':
 
         print(f'Running quick simulation to test detection efficiencies for {type} transients between {min_z} < z < {max_z}')
 
@@ -145,7 +158,7 @@ if __name__ == '__main__':
         
         for band in ['uv', 'u', 'g']:
             overview = stats.statistics(all_results, max_z, type, band = band, test = True, number_redshifts = number_redshifts)
-            overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s.csv', index = False)
+            overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{number_redshifts}_test.csv', index = False)
 
 
 

@@ -7,7 +7,7 @@ from castor_etc.sources import ExtendedSource, GalaxySource, PointSource
 from castor_etc.telescope import Telescope
 
 filepath_to_castor_folder = '/users/deckersm/CASTOR/'
-filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
+#filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 # Star formation rate density function (Madau & Dickinson 2014) -- check for more up to date versions (2018>) check Graur (2017)

@@ -8,7 +8,7 @@ from scipy.interpolate import RectBivariateSpline
 from mpl_toolkits.mplot3d import Axes3D
 
 filepath_to_castor_folder = '/users/deckersm/CASTOR/'
-filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
+#filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
 
 
 # Function that produces a 2D surface in wavelength and phase space from existing spectral templates
