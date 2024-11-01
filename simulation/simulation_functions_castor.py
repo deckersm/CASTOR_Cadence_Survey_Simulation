@@ -72,7 +72,7 @@ def ra_dec_samples(c_ra, c_dec, radius, number):
 
 # Function to pull random start times for each transients from before the start of the survey (default = 30 d) until the end of the survey
 def time_samples(survey_time, number, time_before_survey = 30, start_time = 0):
-    time_array = np.random.uniform(-time_before_survey + start time, survey_time + start_time, number)
+    time_array = np.random.uniform(-time_before_survey + start_time, survey_time + start_time, number)
     return time_array
 
 
@@ -105,25 +105,26 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
 def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0.01, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, test = False):
-    results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s.csv'
+    results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s_{c_ra}_{c_dec}.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
 
     # Check if redshift array file exists, else create it
     if os.path.exists(redshift_filename):
         redshift_array = np.load(redshift_filename)
-        print(f"Loaded redshift array from {redshift_filename}\n")
-        print('Simulating a total of {} {} transients between z = 0.001 and z = {} \n'.format(len(redshift_array), type, max_z))
+        print(f'Loaded redshift array from {redshift_filename}\n')
+        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
 
     else:
         # Create a new redshift array and save it for consistency
         redshift_array = redshift_samples(type = type, z_max = max_z, survey_time = survey_time, survey_radius = radius)
         np.save(redshift_filename, redshift_array)
-        print(f"Generated and saved new redshift array to {redshift_filename}\n")
-        print('Simulating a total of {} {} transients between z = 0.001 and z = {} \n'.format(len(redshift_array), type, max_z))
+        print(f'Generated and saved new redshift array to {redshift_filename}\n')
+        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
 
     # Initialise processed_count and checks how many transients need to be generated
     processed_count = 0
     num_transients = len(redshift_array)
+    
     # Producing the ra, dec, and time arrays
     ra_array, dec_array = ra_dec_samples(c_ra, c_dec, radius, num_transients)
     time_array = time_samples(survey_time, num_transients, start_time = start_time)
@@ -141,19 +142,19 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
 
         # If all desired transients have been processed, exit
         if len(remaining_numbers) <= 0:
-
             print("All desired transients have already been processed.\n")
             return all_results  # Return the existing results
     else:
         # If the file doesn't exist, create an empty DataFrame
         all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
         remaining_numbers = np.arange(0, num_transients, 1)
+        #numbers = np.arange(0, num_transients, 1)
+
         print(f"No existing results found for {type} with maxz = {max_z}, starting fresh.\n")
 
     # Iterating over the remaining_numbers (i.e. those that have not been previously processed)
     for number in remaining_numbers:
         try:
-        #if 1==1:
             # Produce a light curve based on the input
             result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground)
             
@@ -196,15 +197,15 @@ def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground,
     # Check if redshift array file exists, else create it
     if os.path.exists(redshift_filename):
         redshift_array = np.load(redshift_filename)
-        print(f"Loaded redshift array from {redshift_filename}\n")
-        print('Simulating a total of {} {} transients at {} redshifts between z = 0.001 and z = {} \n'.format(len(models), type, len(redshift_array), max_z))
+        print(f'Loaded redshift array from {redshift_filename}\n')
+        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
 
     else:
         # Create a new redshift array and save it for consistency
         redshift_array = np.linspace(min_z, max_z, number_redshifts)
         np.save(redshift_filename, redshift_array)
-        print(f"Generated and saved new redshift array to {redshift_filename}\n")
-        print('Simulating a total of {} {} transients at {} redshifts between z = 0.001 and z = {} \n'.format(len(models), type, len(redshift_array), max_z))
+        print(f'Generated and saved new redshift array to {redshift_filename}\n')
+        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
 
     # Initialise processed_count and checks how many transients need to be generated
     processed_count = 0

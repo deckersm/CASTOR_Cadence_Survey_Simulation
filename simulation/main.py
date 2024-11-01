@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     # Extracting all available models from the spectral templates folder
     models = []
-    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_*d.dat'.format(type, type))
+    files = glob.glob(filepath_to_castor_folder + f'Templates/{type}/SED_{type}_*d.dat')
     for f in files:
         models.append(f.split('/')[-1].split('_')[2])
     models = list(set(models))
@@ -124,6 +124,7 @@ if __name__ == '__main__':
         # If no coordinates for the fields are provided, then run simulation on the four LSST deep drilling fields
         if ra_array == None:
             
+            # Defining the (ra,dec) coordinates of the centers of the LSST deep drilling fields
             centers = {
                 "ELAIS_S1": (9.45, -44.0),
                 "XMM_LSS": (35.708, -4.75),
@@ -131,24 +132,33 @@ if __name__ == '__main__':
                 "COSMOS": (150.1, 2.182)
             }
             count = 0
-            for field_name, (ra_center, dec_center) in centers.items():        
+            for field_name, (ra_center, dec_center) in centers.items():      
+                
                 # Populating the redshift range with the transients, extracting the light curves as they would be seen by CASTOR
-                # Starting the survey on two fields visible for 6 months, then switch to the second two visible fields
+                # Starting the survey on two LSST deep drilling fields visible for 6 months, then switch to the second two visible fields
+                
                 if count < 2:
                     all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 0)
                 else:
                     all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 182.625)
                 count += 1
-        # Otherwise if fields are provided, loop through the provided fields
+
+                # Running detection statistics in the three CASTOR filters
+                print('Finished simulating light curves, now running statistics \n')
+                for band in ['uv', 'u', 'g']:
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
+                    overview.to_csv(f'results/statistics_{type}_{max_x}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
+            
+        # If instead fields are provided by user, loop through the provided fields
         else:
             for ra_center, dec_center in zip(ra_array, dec_array):
                 all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center)
-
-        # Running detection statistics in the three CASTOR filters
-        print('Finished simulating light curves, now running statistics \n')
-        for band in ['uv', 'u', 'g']:
-            overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
-            overview.to_csv('results/statistics_{}_{}_{}_{}d_{}s.csv'.format(type, max_z, band, cadence, exposure, c_ra = ra_center, c_dec = dec_center), index = False)
+        
+                # Running detection statistics in the three CASTOR filters
+                print('Finished simulating light curves, now running statistics \n')
+                for band in ['uv', 'u', 'g']:
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
+                    overview.to_csv(f'results/statistics_{type}_{max_x}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
 
     elif simul_type == 'test':
 

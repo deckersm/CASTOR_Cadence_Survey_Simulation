@@ -41,15 +41,14 @@ def config_source(type, model, phase, z):
     MySource = PointSource()
 
     # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
-    if os.path.isfile(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)) == True:
-        filename = filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_{}d.dat'.format(type, type, model, phase)
-    elif os.path.isfile(filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)) == True:
-        filename = filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
+    if os.path.isfile(filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_{phase}d.dat') == True:
+        filename = filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_{phase}d.dat'
+    elif os.path.isfile(filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{}d.dat') == True:
+        filename = filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{phase}d.dat'
     else:
         spectrum = spec_interp.create_spec_at_phase(type, model, phase)
-        spectrum.to_csv(filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase), index = False, encoding='utf-8', sep = ' ')
-        filename = filepath_to_castor_folder + 'Templates/interpolated_spectra/SED_{}_{}_{}d.dat'.format(type, model, phase)
-    
+        spectrum.to_csv(filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{phase}d.dat', index = False, encoding='utf-8', sep = ' ')
+        filename = filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{phase}d.dat'    
     MySource.use_custom_spectrum(filename)
 
     # Putting the spectrum at distance d (correcting flux and wavelength)
@@ -113,7 +112,7 @@ def create_lc(type, model, z, ra, dec, ebv, number, MyTelescope, MyBackground, c
     results = pd.DataFrame(columns = ['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'time', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
 
     # Finding all available spectra of this particular transient type and model and saving available phases
-    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_*d.dat')
     phases_ = []
     for f in files:
         phases_.append(float(f.split('/')[-1].split('_')[3].replace('d.dat', '')))

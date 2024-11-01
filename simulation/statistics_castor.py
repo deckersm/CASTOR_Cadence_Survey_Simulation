@@ -138,8 +138,9 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
     # Check if redshift array file exists, else create it
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
+    
     # Load existing statistics if they exist
-    overview_file = f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s.csv'
+    overview_file = f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{c_ra}_{c_dec}.csv'
 
     if test == True:
         redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}_{number_redshifts}_test.npy'
@@ -150,9 +151,6 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         print(f"Loaded redshift array from {redshift_filename}\n")
 
     else:
-        # Create a new redshift array and save it for consistency
-        #redshift_array = simul.redshift_samples(type = type, z_max = max_z)
-        #np.save(redshift_filename, redshift_array)
         print(f"Cannot find {redshift_filename}, likely light curves have not been simulated with these survey parameters. \n")
 
     if os.path.isfile(overview_file):
@@ -161,6 +159,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     
     if test == False:
+
         # Checks how many transients we need to run, and how many have already been processed
         num_transients = len(redshift_array)
         numbers_total = np.arange(0, num_transients, 1)

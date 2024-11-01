@@ -15,7 +15,7 @@ filepath_to_castor_folder = '/users/deckersm/CASTOR/'
 def create_2d_surface(type, model, cadence = 0.1, plot = False):
 
     # Finding all the spectral templates for this particular transient type and model
-    files = glob.glob(filepath_to_castor_folder + 'Templates/{}/SED_{}_{}_*d.dat'.format(type, type, model))
+    files = glob.glob(filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_*d.dat')
 
     # Saving all the fluxes and phases for this particular transient type and model
     phases, fluxes = [],[]
