@@ -43,7 +43,7 @@ def config_source(type, model, phase, z):
     # Import SED, checking first if file exist, otherwise creating spectrum using spectral interpolation functions
     if os.path.isfile(filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_{phase}d.dat') == True:
         filename = filepath_to_castor_folder + f'Templates/{type}/SED_{type}_{model}_{phase}d.dat'
-    elif os.path.isfile(filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{}d.dat') == True:
+    elif os.path.isfile(filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{phase}d.dat') == True:
         filename = filepath_to_castor_folder + f'Templates/interpolated_spectra/SED_{type}_{model}_{phase}d.dat'
     else:
         spectrum = spec_interp.create_spec_at_phase(type, model, phase)

@@ -147,7 +147,7 @@ if __name__ == '__main__':
                 print('Finished simulating light curves, now running statistics \n')
                 for band in ['uv', 'u', 'g']:
                     overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
-                    overview.to_csv(f'results/statistics_{type}_{max_x}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
+                    overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
             
         # If instead fields are provided by user, loop through the provided fields
         else:
@@ -158,7 +158,7 @@ if __name__ == '__main__':
                 print('Finished simulating light curves, now running statistics \n')
                 for band in ['uv', 'u', 'g']:
                     overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
-                    overview.to_csv(f'results/statistics_{type}_{max_x}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
+                    overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
 
     elif simul_type == 'test':
 

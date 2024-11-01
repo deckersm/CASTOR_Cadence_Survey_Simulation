@@ -154,20 +154,21 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         print(f"Cannot find {redshift_filename}, likely light curves have not been simulated with these survey parameters. \n")
 
     if os.path.isfile(overview_file):
-        overview = pd.read_csv(overview_file, names=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
-    else:
-        overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
-    
-    if test == False:
+        overview = pd.DataFrame(pd.read_csv(overview_file))
 
         # Checks how many transients we need to run, and how many have already been processed
         num_transients = len(redshift_array)
         numbers_total = np.arange(0, num_transients, 1)
         numbers_completed = list(set(overview['number']))
-
         numbers = list(set(numbers_total) - set(numbers_completed))
-
         print(f'{len(numbers_completed)} already processed, processing remaining {len(numbers)} \n')
+
+    else:
+        overview = pd.DataFrame()
+        numbers = list(set(df['number']))
+
+    if test == False:
+
 
         # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
         for number in numbers:
@@ -175,7 +176,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
             
             # Appending results to overview file
             if len(overview) != 0:
-                overview = pd.concat([overview, result])
+                overview = pd.concat([overview, result], ignore_index = True)
             else:
                 overview = result
     else:
@@ -185,7 +186,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
             
             # Appending results to overview file
             if len(overview) != 0:
-                overview = pd.concat([overview, result])
+                overview = pd.concat([overview, result], ignore_index = True)
             else:
                 overview = result
 
