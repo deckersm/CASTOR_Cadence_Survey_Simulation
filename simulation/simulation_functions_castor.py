@@ -16,7 +16,7 @@ import rates_castor as rates
 
 # Function which extracts redshifts based on the volumetric rate of a particular transient type
 # Defaults assume the survey runs for 1 year and covers 20 deg^2 of the sky
-def redshift_samples(type = 'snia', z_min = 0.001, z_max = 0.5, survey_time = 365.25, survey_radius = 1.75):
+def redshift_samples(type = 'snia', z_min = 0.00, z_max = 0.5, survey_time = 365.25, survey_radius = 1.75):
     
     # Adding units to survey time
     survey_time = survey_time * u.yr
@@ -104,7 +104,7 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
 # Function that iterates of the redshift array created and appends a light curve for each transient to the results file
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
-def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0.01, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, test = False):
+def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, test = False):
     results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s_{c_ra}_{c_dec}.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
 
@@ -116,7 +116,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
 
     else:
         # Create a new redshift array and save it for consistency
-        redshift_array = redshift_samples(type = type, z_max = max_z, survey_time = survey_time, survey_radius = radius)
+        redshift_array = redshift_samples(type = type, z_min = min_z, z_max = max_z, survey_time = survey_time, survey_radius = radius)
         np.save(redshift_filename, redshift_array)
         print(f'Generated and saved new redshift array to {redshift_filename}\n')
         print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')

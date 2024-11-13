@@ -78,7 +78,7 @@ if __name__ == '__main__':
     if args.min_redshift != None:
         min_z = args.min_redshift
     else:
-        min_z = 0.01
+        min_z = 0
     
     if args.cadence != None:
         cadence = args.cadence
@@ -144,9 +144,8 @@ if __name__ == '__main__':
                 count += 1
 
                 # Running detection statistics in the three CASTOR filters
-                print('Finished simulating light curves, now running statistics \n')
                 for band in ['uv', 'u', 'g']:
-                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center)
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
             
         # If instead fields are provided by user, loop through the provided fields
@@ -155,9 +154,8 @@ if __name__ == '__main__':
                 all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center)
         
                 # Running detection statistics in the three CASTOR filters
-                print('Finished simulating light curves, now running statistics \n')
                 for band in ['uv', 'u', 'g']:
-                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure)
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center)
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
 
     elif simul_type == 'test':
