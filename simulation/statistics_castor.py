@@ -20,18 +20,21 @@ def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
     else:
         return False
         
-def lc_detected_plateau(lc, snr_lim = 3, n_det_above_snr = 1):
+def lc_detected_plateau(lc, snr_lim = 2, n_det_above_snr = 1):
     if len(lc.loc[lc['snr_plt'] >= snr_lim]) >= n_det_above_snr:
         return True
     else:
         return False
 
-def plateau_phase_detection(lc, snr_lim = 1):
-    return np.nanmax(lc.loc[lc['snr_plt'] >= snr_lim, 'phase'])
+def plateau_phase_detection(lc, snr_lim = 2):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'phase'] 
         
-def mag_plateau_detection(lc, snr_lim = 1):
-    index = np.where(lc['phase']==np.nanmax(lc.loc[lc['snr_plt'] >= snr_lim, 'phase']))[0][0]
-    return lc.loc[index, 'mag_plt']        
+def mag_plateau_detection(lc, snr_lim = 2):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'mag_plt']   
 
 # Extracts the phase of first detection assuming the SNR limit from phase 0 documents, although this can be changed
 def first_detection(lc, snr_lim = 5):
