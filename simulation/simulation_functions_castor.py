@@ -117,6 +117,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, plat
     else:
         # Create a new redshift array and save it for consistency
         redshift_array = redshift_samples(type = type, z_min = min_z, z_max = max_z, survey_time = survey_time, survey_radius = radius)
+        #redshift_array =np.random.uniform(min_z, max_z,100)
         np.save(redshift_filename, redshift_array)
         print(f'Generated and saved new redshift array to {redshift_filename}\n')
         print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')

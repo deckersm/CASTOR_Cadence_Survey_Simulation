@@ -20,21 +20,26 @@ def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
     else:
         return False
         
-def lc_detected_plateau(lc, snr_lim = 2, n_det_above_snr = 1):
+def lc_detected_plateau(lc, snr_lim = 1e-10, n_det_above_snr = 1):
     if len(lc.loc[lc['snr_plt'] >= snr_lim]) >= n_det_above_snr:
         return True
     else:
         return False
 
-def plateau_phase_detection(lc, snr_lim = 2):
+def plateau_phase_detection(lc, snr_lim = 1e-10):
     index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
     if lc.loc[index, 'snr_plt']>= snr_lim:
        return lc.loc[index, 'phase'] 
         
-def mag_plateau_detection(lc, snr_lim = 2):
+def mag_plateau_detection(lc, snr_lim = 1e-10):
     index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
     if lc.loc[index, 'snr_plt']>= snr_lim:
-       return lc.loc[index, 'mag_plt']   
+       return lc.loc[index, 'mag_plt']  
+
+def snr_plateau_detection(lc, snr_lim = 1e-10):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'snr_plt']   
 
 # Extracts the phase of first detection assuming the SNR limit from phase 0 documents, although this can be changed
 def first_detection(lc, snr_lim = 5):
@@ -103,7 +108,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
     elif plateau==True:
         overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'detected_plateau', 'phase_detected', 't0', 'mag_peak', 
-                                         'abs_mag_peak', 'mag_detect', 'phase_plateau', 'mag_plateau'
+                                         'abs_mag_peak', 'mag_detect', 'phase_plateau', 'mag_plateau','snr_plateau'
                                          ])       
     
     # Locating a single light curve within the larger results file
@@ -135,9 +140,11 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
                         if det_plateau:
                             mag_plateau_det = mag_plateau_detection(lc)
                             plt_phase_det = plateau_phase_detection(lc)
+                            plt_snr_det = snr_plateau_detection(lc)
                         else:
                             mag_plateau_det = np.nan
                             plt_phase_det = np.nan
+                            plt_snr_det = np.nan
                     elif plateau==False: 
                         pass
                 except ValueError:
@@ -155,7 +162,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
             if plateau==False:
                 overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, first_det, t0, mag_peak, abs_mag_peak, mag_first_det]
             elif plateau==True:
-                overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, det_plateau, first_det, t0, mag_peak, abs_mag_peak, mag_first_det, plt_phase_det, mag_plateau_det]
+                overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, det_plateau, first_det, t0, mag_peak, abs_mag_peak, mag_first_det, plt_phase_det, mag_plateau_det, plt_snr_det]
 
         except Exception as e:
             print(f"Error processing light curve number {i}: {e}")
