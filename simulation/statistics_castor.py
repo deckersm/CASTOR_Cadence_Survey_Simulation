@@ -169,7 +169,6 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
     if test == False:
 
-
         # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
         for number in numbers:
             result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)

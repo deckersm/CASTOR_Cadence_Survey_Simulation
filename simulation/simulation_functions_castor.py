@@ -45,10 +45,10 @@ def redshift_samples(type = 'snia', z_min = 0.00, z_max = 0.5, survey_time = 365
     time_dilation = survey_time_years / (1 + z_bins)
 
     # Integrate to find the total comoving volume surveyed up to z_max, weighted by the rate
-    total_volume = np.trapz(dVdz_survey * rate * time_dilation, z_bins)  # Mpc³ * yr^-1
+    total_number = np.trapz(dVdz_survey * rate * time_dilation, z_bins)   
 
     # Calculate the total number of transients over the survey period
-    N_total = total_volume.decompose().value  # Dimensionless (total number of transients)
+    N_total = total_number.value  # Dimensionless (total number of transients)
 
     # Probability distribution proportional to dV/dz * rate, normalized to 1
     pdf = (dVdz * rate * time_dilation).value
@@ -241,7 +241,9 @@ def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground,
         for z in redshift_array:
             for m in models:
 
+                # Check but why are we not allowing repeated redshift/model combinations? Array of models is representative of population but limited and redshifts can in principle be repeated
                 if len(all_results.loc[(all_results['z']==z) & (all_results['model']==m)]) == 0:
+
                     result = process_single_redshift_test(count, type, m, z, ra_array, dec_array, time_array, MyTelescope, MyBackground)
                     # Append the light curve to the results file
                     if len(all_results) != 0:
