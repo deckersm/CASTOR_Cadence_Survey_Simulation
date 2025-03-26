@@ -38,7 +38,6 @@ def redshift_samples(type = 'snia', z_min = 0.00, z_max = 0.5, survey_time = 365
 
     # Multiply by 4π steradians and the sky fraction to get comoving volume over the survey area
     dVdz_survey = dVdz * 4 * np.pi * fraction_sky  # Mpc³
-
     # Apply time dilation correction to the survey time in each redshift bin
     # Effective survey time in each bin is scaled by (1 + z)
     survey_time_years = survey_time / 365.25
@@ -49,7 +48,7 @@ def redshift_samples(type = 'snia', z_min = 0.00, z_max = 0.5, survey_time = 365
 
     # Calculate the total number of transients over the survey period
     N_total = total_number.value  # Dimensionless (total number of transients)
-
+    print('Total number of SNe Ia = {}\n'.format(N_total))
     # Probability distribution proportional to dV/dz * rate, normalized to 1
     pdf = (dVdz * rate * time_dilation).value
     pdf /= np.sum(pdf)  # Normalize to get a proper probability distribution
@@ -90,10 +89,11 @@ def mw_ebv(ra, dec):
 
 
 # Function the absorbs redshift, ra, dec, time, ebv, and outputs the model light curve
-def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground):
-    z = redshift_array[i]
-    ra, dec = ra_array[i], dec_array[i]
-    time = time_array[i]
+def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground, starting_number = 0):
+    k = i - starting_number
+    z = redshift_array[k]
+    ra, dec = ra_array[k], dec_array[k]
+    time = time_array[k]
 
     ebv = mw_ebv(ra, dec)  # Calculate extinction at this RA and Dec
     model = models[int(np.random.uniform(0, len(models), 1))]
@@ -104,7 +104,7 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
 # Function that iterates of the redshift array created and appends a light curve for each transient to the results file
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
-def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, test = False):
+def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, starting_number = 0, test = False):
     results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s_{c_ra}_{c_dec}.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
 
@@ -137,8 +137,8 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
 
         # Check which numbered transients are already processed
         processed_numbers = list(set(all_results['number']))
-        remaining_numbers = list(set(np.arange(0, num_transients, 1)) - set(processed_numbers))
-        print(f"{len(processed_numbers)} transients already processed, {len(remaining_numbers)} left to process.\n")
+        remaining_numbers = list(set(np.arange(starting_number, num_transients + starting_number, 1)) - set(processed_numbers))
+        print(f"{len(processed_numbers) + starting_number} transients already processed, {len(remaining_numbers)} left to process.\n")
 
         # If all desired transients have been processed, exit
         if len(remaining_numbers) <= 0:
@@ -147,29 +147,31 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
     else:
         # If the file doesn't exist, create an empty DataFrame
         all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
-        remaining_numbers = np.arange(0, num_transients, 1)
+        remaining_numbers = np.arange(starting_number, num_transients + starting_number, 1)
         #numbers = np.arange(0, num_transients, 1)
 
-        print(f"No existing results found for {type} with maxz = {max_z}, starting fresh.\n")
+        print(f"No existing results found for {type} with maxz = {max_z}, starting fresh, simulating {len(remaining_numbers)} transients.\n")
 
     # Iterating over the remaining_numbers (i.e. those that have not been previously processed)
-    for number in remaining_numbers:
-        try:
-            # Produce a light curve based on the input
-            result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground)
-            
-            # Append the light curve to the results file
-            if len(all_results) != 0:
-                all_results = pd.concat([all_results, result])
-            else:
-                all_results = result
+    if len(remaining_numbers)>0:
+        for number in remaining_numbers:
+            try:
+                # Produce a light curve based on the input
+                result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground, starting_number = starting_number)
+                
+                # Append the light curve to the results file
+                if len(all_results) != 0:
+                    all_results = pd.concat([all_results, result])
+                else:
+                    all_results = result
 
-            # Save the results incrementally to avoid losing progress
-            all_results.to_csv(results_filename, index=False)
-            print(f'Simulated transient {number+1}/{num_transients}\n')
+                # Save the results incrementally to avoid losing progress
+                all_results.to_csv(results_filename, index=False)
+                print(f'Simulated transient {number+1}/{num_transients + starting_number}\n')
 
-        except Exception as e:
-            print(f"Error processing transient {number+1}: {e}\n")
+            except Exception as e:
+                print(number, type, models, redshift_array)
+                print(f"Error processing transient {number+1}: {e}\n")
 
     # Reset index and save the final results to a CSV
     all_results = all_results.reset_index(drop=True)
@@ -189,7 +191,7 @@ def process_single_redshift_test(i, type, model, redshift, ra_array, dec_array, 
 # Function that iterates of the redshift array created and appends a light curve for each transient to the results file
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
-def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground, min_z = 0.01, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, number_redshifts = 10):
+def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground, min_z = 0.01, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, number_redshifts = 10, starting_number = 0):
 
     results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s_{number_redshifts}_test.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}_{number_redshifts}_test.npy'
@@ -198,14 +200,16 @@ def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground,
     if os.path.exists(redshift_filename):
         redshift_array = np.load(redshift_filename)
         print(f'Loaded redshift array from {redshift_filename}\n')
-        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
 
     else:
         # Create a new redshift array and save it for consistency
         redshift_array = np.linspace(min_z, max_z, number_redshifts)
         np.save(redshift_filename, redshift_array)
         print(f'Generated and saved new redshift array to {redshift_filename}\n')
-        print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
+    
+    print(f'Simulating {len(models)} {type} models at {len(redshift_array)} redshifts between z = 0.001 and z = {max_z} \n')
+    print(f'Simulating a total of {len(models) * len(redshift_array)} light curves  \n')
+
 
     # Initialise processed_count and checks how many transients need to be generated
     processed_count = 0
@@ -237,14 +241,13 @@ def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground,
         print(f"No existing results found for {type} with maxz = {max_z}, starting fresh.\n")
 
     count = 0
-    try:
-        for z in redshift_array:
-            for m in models:
-
+    for z in redshift_array:
+        for m in models:
+            try:
                 # Check but why are we not allowing repeated redshift/model combinations? Array of models is representative of population but limited and redshifts can in principle be repeated
                 if len(all_results.loc[(all_results['z']==z) & (all_results['model']==m)]) == 0:
 
-                    result = process_single_redshift_test(count, type, m, z, ra_array, dec_array, time_array, MyTelescope, MyBackground)
+                    result = process_single_redshift_test(count + starting_number, type, m, z, ra_array, dec_array, time_array, MyTelescope, MyBackground)
                     # Append the light curve to the results file
                     if len(all_results) != 0:
                         all_results = pd.concat([all_results, result])
@@ -255,8 +258,8 @@ def populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground,
                 print(f'Simulated transient {count+1}/{num_transients}\n')
                 count += 1
 
-    except Exception as e:
-        print(f"Error processing transient {count+1}: {e}\n")
+            except Exception as e:
+                print(f"Error processing transient {count+1}: {e}\n")
 
     # Reset index and save the final results to a CSV
     all_results = all_results.reset_index(drop=True)
