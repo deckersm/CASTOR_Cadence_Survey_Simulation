@@ -20,23 +20,23 @@ def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
     else:
         return False
         
-def lc_detected_plateau(lc, snr_lim = 1e-10, n_det_above_snr = 1):
+def lc_detected_plateau(lc, snr_lim = 5, n_det_above_snr = 1):
     if len(lc.loc[lc['snr_plt'] >= snr_lim]) >= n_det_above_snr:
         return True
     else:
         return False
 
-def plateau_phase_detection(lc, snr_lim = 1e-10):
+def plateau_phase_detection(lc, snr_lim = 5):
     index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
     if lc.loc[index, 'snr_plt']>= snr_lim:
        return lc.loc[index, 'phase'] 
         
-def mag_plateau_detection(lc, snr_lim = 1e-10):
+def mag_plateau_detection(lc, snr_lim = 5):
     index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
     if lc.loc[index, 'snr_plt']>= snr_lim:
        return lc.loc[index, 'mag_plt']  
 
-def snr_plateau_detection(lc, snr_lim = 1e-10):
+def snr_plateau_detection(lc, snr_lim = 5):
     index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
     if lc.loc[index, 'snr_plt']>= snr_lim:
        return lc.loc[index, 'snr_plt']   
@@ -127,7 +127,10 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
             # Passing light curve to basic and more complex detection checks (checks detections in any filter at this point)
             det = lc_detected(lc_all_filters)
             det_useful = lc_detected_useful(lc_all_filters)
-
+            if plateau==True:
+                det_plateau = lc_detected_plateau(lc_all_filters)
+            else:
+                pass
             # If light curve has passed basic detection criteria, check all other statistics in specified filter
             if det:
                 try:
@@ -136,7 +139,6 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
                     mag_peak, t0 = mag_at_peak(lc)
                     abs_mag_peak = abs_peak_mag(mag_peak, ebv, z)
                     if plateau==True:
-                        det_plateau = lc_detected_plateau(lc_all_filters)
                         if det_plateau:
                             mag_plateau_det = mag_plateau_detection(lc)
                             plt_phase_det = plateau_phase_detection(lc)
@@ -148,10 +150,19 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
                     elif plateau==False: 
                         pass
                 except ValueError:
-                    first_det = np.nan
-                    mag_first_det = np.nan
-                    mag_peak, t0 = np.nan, np.nan
-                    abs_mag_peak = np.nan
+                    if plateau==True:
+                        mag_plateau_det = np.nan
+                        plt_phase_det = np.nan
+                        plt_snr_det = np.nan
+                        first_det = np.nan
+                        mag_first_det = np.nan
+                        mag_peak, t0 = np.nan, np.nan
+                        abs_mag_peak = np.nan
+                    else:
+                        first_det = np.nan
+                        mag_first_det = np.nan
+                        mag_peak, t0 = np.nan, np.nan
+                        abs_mag_peak = np.nan
             else:
                 first_det = np.nan
                 mag_first_det = np.nan
