@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_redshift', '--max_z', '-z', help='Maximum redshift to simulate transients out to', type=np.float64)
     parser.add_argument('--min_redshift', '--min_z', help='Minimum redshift to simulate transients at', type=np.float64)
     parser.add_argument('--cadence', '-c', help='Cadence of survey', type=np.float64)      
+    parser.add_argument('--passbands', '--filters', '-f', help='Passbands/filters to perform statistics on', nargs='+', type=str)
     parser.add_argument('--exposure', '-e', help='Exposure time of each visit of survey', type=np.float64)
     parser.add_argument('--length_survey', '-l', help='Duration of survey in days', type=np.float64)
     parser.add_argument('--field_ra', '-r', help='ras of the centers of the fields for the simulation, separated by spaces', type=np.float64, action=collect_as(np.array))
@@ -84,6 +85,11 @@ if __name__ == '__main__':
         cadence = args.cadence
     else:
         cadence = 1.0
+
+    if args.passbands != None:
+        passbands = args.passbands
+    else:
+        passbands = ['g', 'u', 'uv']
 
     if args.exposure != None:
         exposure = args.exposure
@@ -152,7 +158,7 @@ if __name__ == '__main__':
                 count += 1
 
                 # Running detection statistics in the three CASTOR filters
-                for band in ['uv', 'u', 'g']:
+                for band in passbands:
                     overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center, starting_number = starting_number)
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
             
@@ -171,7 +177,7 @@ if __name__ == '__main__':
                 all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, cadence = cadence, exposure = exposure, survey_time = 365.25, c_ra = ra_center, c_dec = dec_center, starting_number = starting_number)
         
                 # Running detection statistics in the three CASTOR filters
-                for band in ['uv', 'u', 'g']:
+                for band in passbands:
                     overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center, starting_number = starting_number)
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
                 count += 1
@@ -182,7 +188,7 @@ if __name__ == '__main__':
 
         all_results = simul.populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground, min_z = min_z, number_redshifts = number_redshifts, starting_number = starting_number)
         
-        for band in ['uv', 'u', 'g']:
+        for band in passbands:
             overview = stats.statistics(all_results, max_z, type, band = band, test = True, number_redshifts = number_redshifts)
             overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{number_redshifts}_test.csv', index = False)
 
