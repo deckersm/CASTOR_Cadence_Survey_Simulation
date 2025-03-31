@@ -20,8 +20,9 @@ def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
     else:
         return False
         
-def lc_detected_plateau(lc, snr_lim = 5, n_det_above_snr = 1):
-    if len(lc.loc[lc['snr_plt'] >= snr_lim]) >= n_det_above_snr:
+def lc_detected_plateau(lc, snr_lim = 5):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
         return True
     else:
         return False
