@@ -45,6 +45,7 @@ Optional arguments:
 
 `--field_ra`, `-r` (`--field_dec`, `-d`) = ra and dec (in deg) of the center of the fields covered by the survey, if multiple, separate with spaces.
 
+'--plateau' = Caculate detection for TDEs at the plateau. It only works when type = TDE (default = False).
 
 
 This will produce several output files in the `results` folder:
