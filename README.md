@@ -24,7 +24,7 @@ python main.py <<arguments>>
 
 Required arguments:
 
-`--type`, `-t` = transient type
+`--type`, `-t` = transient type ('snia', 'snii', 'tde', 'slsn', 'iax', 'snibc', '91bg')
 
 `--max_redshift`, `-z` = maximum redshift out to which transients are simulated
 
