@@ -89,7 +89,7 @@ def mw_ebv(ra, dec):
 
 
 # Function the absorbs redshift, ra, dec, time, ebv, and outputs the model light curve
-def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground, starting_number = 0):
+def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array, time_array, plateau, cadence, exposure, MyTelescope, MyBackground, starting_number = 0):
     k = i - starting_number
     z = redshift_array[k]
     ra, dec = ra_array[k], dec_array[k]
@@ -97,14 +97,14 @@ def process_single_redshift(i, type, models, redshift_array, ra_array, dec_array
 
     ebv = mw_ebv(ra, dec)  # Calculate extinction at this RA and Dec
     model = models[int(np.random.uniform(0, len(models), 1))]
-    results = utils.create_lc(type, model, z, ra, dec, ebv, i, MyTelescope, MyBackground, start_time = time, cadence = cadence, exposure = exposure)
+    results = utils.create_lc(type, model, z, ra, dec, ebv, i, MyTelescope, MyBackground, start_time = time, plateau = plateau, cadence = cadence, exposure = exposure)
     return results
 
 
 # Function that iterates of the redshift array created and appends a light curve for each transient to the results file
 # This will check whether a results file already exists and continue where it last left off if some results were already produced
 # Also checks for existing redshift array file to ensure we don't start from scratch every time the function is ran
-def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_z = 0, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, starting_number = 0, test = False):
+def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, plateau, min_z = 0, c_ra=9.45, c_dec=-44.0, radius=1.75, cadence = 1.0, exposure = 100, survey_time = 365.25, start_time = 0, starting_number = 0, test = False):
     results_filename = f'results/results_{type}_{max_z}_{cadence}d_{exposure}s_{c_ra}_{c_dec}.csv'
     redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
 
@@ -117,6 +117,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
     else:
         # Create a new redshift array and save it for consistency
         redshift_array = redshift_samples(type = type, z_min = min_z, z_max = max_z, survey_time = survey_time, survey_radius = radius)
+        #redshift_array =np.random.uniform(min_z, max_z,100)
         np.save(redshift_filename, redshift_array)
         print(f'Generated and saved new redshift array to {redshift_filename}\n')
         print(f'Simulating a total of {len(redshift_array)} {type} transients between z = 0.001 and z = {max_z} \n')
@@ -146,9 +147,11 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
             return all_results  # Return the existing results
     else:
         # If the file doesn't exist, create an empty DataFrame
-        all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
+        if plateau==True:
+            all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr','mag_plt', 'mag_err_plt', 'snr_plt'])
+        elif plateau==False:
+            all_results = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'phase', 'filter', 'mag', 'mag_err', 'snr'])
         remaining_numbers = np.arange(starting_number, num_transients + starting_number, 1)
-        #numbers = np.arange(0, num_transients, 1)
 
         print(f"No existing results found for {type} with maxz = {max_z}, starting fresh, simulating {len(remaining_numbers)} transients.\n")
 
@@ -157,7 +160,7 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
         for number in remaining_numbers:
             try:
                 # Produce a light curve based on the input
-                result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, cadence, exposure, MyTelescope, MyBackground, starting_number = starting_number)
+                result = process_single_redshift(number, type, models, redshift_array, ra_array, dec_array, time_array, plateau, cadence, exposure, MyTelescope, MyBackground, starting_number = starting_number)
                 
                 # Append the light curve to the results file
                 if len(all_results) != 0:
@@ -170,7 +173,6 @@ def populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, min_
                 print(f'Simulated transient {number+1}/{num_transients + starting_number}\n')
 
             except Exception as e:
-                print(number, type, models, redshift_array)
                 print(f"Error processing transient {number+1}: {e}\n")
 
     # Reset index and save the final results to a CSV

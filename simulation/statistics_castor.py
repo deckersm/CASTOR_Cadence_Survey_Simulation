@@ -19,6 +19,28 @@ def lc_detected(lc, snr_lim = 5, n_det_above_snr = 2):
         return True
     else:
         return False
+        
+def lc_detected_plateau(lc, snr_lim = 5):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+        return True
+    else:
+        return False
+
+def plateau_phase_detection(lc, snr_lim = 5):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'phase'] 
+        
+def mag_plateau_detection(lc, snr_lim = 5):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'mag_plt']  
+
+def snr_plateau_detection(lc, snr_lim = 5):
+    index = np.where(lc['phase']==lc['phase'][len(lc)-1])[0][0]
+    if lc.loc[index, 'snr_plt']>= snr_lim:
+       return lc.loc[index, 'snr_plt']   
 
 # Extracts the phase of first detection assuming the SNR limit from phase 0 documents, although this can be changed
 def first_detection(lc, snr_lim = 5):
@@ -82,19 +104,23 @@ def abs_peak_mag(mb, ebv, z, band = 'g', r_v = 3.1):
 
 
 # Function to process each light curve and pass it to all the above statistics functions
-def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
-    overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
-
+def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False):
+    if plateau==False:
+        overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'phase_detected', 't0', 'mag_peak', 'abs_mag_peak', 'mag_detect'])
+    elif plateau==True:
+        overview = pd.DataFrame(columns=['number', 'type', 'model', 'z', 'ra', 'dec', 'ebv', 'detected', 'detected_useful', 'detected_plateau', 'phase_detected', 't0', 'mag_peak', 
+                                         'abs_mag_peak', 'mag_detect', 'phase_plateau', 'mag_plateau','snr_plateau'
+                                         ])       
+    
     # Locating a single light curve within the larger results file
     lc_all_filters = df.loc[(df['number'] == i)]
     lc_all_filters = lc_all_filters.reset_index(drop=True)
 
     lc = lc_all_filters.loc[(lc_all_filters['filter'] == band)]
     lc = lc.reset_index(drop=True)
-
+    
     if len(lc) > 0:
         print(f'Processing statistics for light curve number {i}')
-
         try:
             # Extracting key parameters for transient
             ra, dec, ebv, z, t, m = lc['ra'][0], lc['dec'][0], lc['ebv'][0], lc['z'][0], lc['type'][0], lc['model'][0]
@@ -102,7 +128,10 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
             # Passing light curve to basic and more complex detection checks (checks detections in any filter at this point)
             det = lc_detected(lc_all_filters)
             det_useful = lc_detected_useful(lc_all_filters)
-
+            if plateau==True:
+                det_plateau = lc_detected_plateau(lc_all_filters)
+            else:
+                pass
             # If light curve has passed basic detection criteria, check all other statistics in specified filter
             if det:
                 try:
@@ -110,11 +139,31 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
                     mag_first_det = mag_first_detection(lc)
                     mag_peak, t0 = mag_at_peak(lc)
                     abs_mag_peak = abs_peak_mag(mag_peak, ebv, z)
+                    if plateau==True:
+                        if det_plateau:
+                            mag_plateau_det = mag_plateau_detection(lc)
+                            plt_phase_det = plateau_phase_detection(lc)
+                            plt_snr_det = snr_plateau_detection(lc)
+                        else:
+                            mag_plateau_det = np.nan
+                            plt_phase_det = np.nan
+                            plt_snr_det = np.nan
+                    elif plateau==False: 
+                        pass
                 except ValueError:
-                    first_det = np.nan
-                    mag_first_det = np.nan
-                    mag_peak, t0 = np.nan, np.nan
-                    abs_mag_peak = np.nan
+                    if plateau==True:
+                        mag_plateau_det = np.nan
+                        plt_phase_det = np.nan
+                        plt_snr_det = np.nan
+                        first_det = np.nan
+                        mag_first_det = np.nan
+                        mag_peak, t0 = np.nan, np.nan
+                        abs_mag_peak = np.nan
+                    else:
+                        first_det = np.nan
+                        mag_first_det = np.nan
+                        mag_peak, t0 = np.nan, np.nan
+                        abs_mag_peak = np.nan
             else:
                 first_det = np.nan
                 mag_first_det = np.nan
@@ -122,7 +171,10 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
                 abs_mag_peak = np.nan
 
             # Saving all detection statistics to overview file
-            overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, first_det, t0, mag_peak, abs_mag_peak, mag_first_det]
+            if plateau==False:
+                overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, first_det, t0, mag_peak, abs_mag_peak, mag_first_det]
+            elif plateau==True:
+                overview.loc[0] = [i, t, m, z, ra, dec, ebv, det, det_useful, det_plateau, first_det, t0, mag_peak, abs_mag_peak, mag_first_det, plt_phase_det, mag_plateau_det, plt_snr_det]
 
         except Exception as e:
             print(f"Error processing light curve number {i}: {e}")
@@ -134,7 +186,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2):
 
 # Function that iterates over the results file and passes each light curve to the process_light_curve function
 # Checks if statistics have previously been run for any of the light curves and if so, picks up where it left off
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100, c_ra=9.45, c_dec=-44.0, test = False, number_redshifts = 10, starting_number = 0):
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100, c_ra=9.45, c_dec=-44.0, test = False, number_redshifts = 10, plateau=False, starting_number = 0):
 
     # Check if redshift array file exists, else create it
     # redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
@@ -171,7 +223,7 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
 
         # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
         for number in numbers:
-            result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr)
+            result = process_light_curve(number, df, band, snr_lim=snr_lim, n_det_above_snr=n_det_above_snr, plateau=plateau)
             
             # Appending results to overview file
             if len(overview) != 0:
