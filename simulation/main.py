@@ -13,8 +13,8 @@ import simulation_functions_castor as simul
 import statistics_castor as stats
 
 
-filepath_to_castor_folder = '/home/ricardo/Documents/codes/CASTOR_Cadence_Survey_Simulation/'
-#filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation/'
+filepath_to_castor_folder = '/users/deckersm/CASTOR/'
+filepath_to_castor_folder = '/Users/maximedeckers/Documents/RSE/CASTOR/CASTOR_Cadence_Survey_Simulation_sandbox/'
 
 
 # To run this file, run the following command from the terminal:
@@ -56,6 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_redshift', '--max_z', '-z', help='Maximum redshift to simulate transients out to', type=np.float64)
     parser.add_argument('--min_redshift', '--min_z', help='Minimum redshift to simulate transients at', type=np.float64)
     parser.add_argument('--cadence', '-c', help='Cadence of survey', type=np.float64)      
+    parser.add_argument('--passbands', '--filters', '-f', help='Passbands/filters to perform statistics on', nargs='+', type=str)
     parser.add_argument('--exposure', '-e', help='Exposure time of each visit of survey', type=np.float64)
     parser.add_argument('--length_survey', '-l', help='Duration of survey in days', type=np.float64)
     parser.add_argument('--field_ra', '-r', help='ras of the centers of the fields for the simulation, separated by spaces', type=np.float64, action=collect_as(np.array))
@@ -90,6 +91,11 @@ if __name__ == '__main__':
         cadence = args.cadence
     else:
         cadence = 1.0
+
+    if args.passbands != None:
+        passbands = args.passbands
+    else:
+        passbands = ['g', 'u', 'uv']
 
     if args.exposure != None:
         exposure = args.exposure
@@ -129,7 +135,10 @@ if __name__ == '__main__':
 
         # If no coordinates for the fields are provided, then run simulation on the four LSST deep drilling fields
         if ra_array == None:
-            
+            print('\n')
+            print('\n')
+            print('\n')
+
             # Defining the (ra,dec) coordinates of the centers of the LSST deep drilling fields
             centers = {
                 "ELAIS_S1": (9.45, -44.0),
@@ -138,45 +147,60 @@ if __name__ == '__main__':
                 "COSMOS": (150.1, 2.182)
             }
             count = 0
-            for field_name, (ra_center, dec_center) in centers.items():      
-                
+            for field_name, (ra_center, dec_center) in centers.items():  
+
+                # Initiating the starting count for the light curves so that each file continues counting from the highest number of the previous file
+                starting_number = 0
+                if count != 0:
+                    starting_number = np.nanmax(all_results['number']+1)
+
                 # Populating the redshift range with the transients, extracting the light curves as they would be seen by CASTOR
                 # Starting the survey on two LSST deep drilling fields visible for 6 months, then switch to the second two visible fields
                 
                 if count < 2:
                     all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, plateau = plateau,  cadence = cadence, 
-                    exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 0
+                    exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 0, starting_number = starting_number
                     )
                 else:
                     all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, plateau = plateau, cadence = cadence, 
-                    exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 182.625
+                    exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center, start_time = 182.625, starting_number = starting_number
                     )
                 count += 1
 
                 # Running detection statistics in the three CASTOR filters
                 for band in ['uv', 'u', 'g']:
-                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center, plateau=plateau)
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center, plateau=plateau, starting_number = starting_number)
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
             
         # If instead fields are provided by user, loop through the provided fields
         else:
+            count = 0
             for ra_center, dec_center in zip(ra_array, dec_array):
-                all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground,  plateau = plateau, cadence = cadence, 
-                exposure = exposure, survey_time = 182.625, c_ra = ra_center, c_dec = dec_center
-                )
+
+                print('\n')
+                print('\n')
+                print('\n')
+
+                starting_number = 0
+                if count != 0:
+                    starting_number = np.nanmax(all_results['number']+1)
+                    
+                all_results = simul.populate_redshift_range(type, models, max_z, MyTelescope, MyBackground, plateau = plateau, cadence = cadence, exposure = exposure, survey_time = 365.25, c_ra = ra_center, c_dec = dec_center, starting_number = starting_number)
         
                 # Running detection statistics in the three CASTOR filters
-                for band in ['uv', 'u', 'g']:
-                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center,plateau=plateau)
+                for band in passbands:
+                    overview = stats.statistics(all_results, max_z, type, band = band, cadence = cadence, exposure = exposure, c_ra = ra_center, c_dec = dec_center, starting_number = starting_number)
+
                     overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{ra_center}_{dec_center}.csv', index = False)
+                count += 1
 
     elif simul_type == 'test':
 
         print(f'Running quick simulation to test detection efficiencies for {type} transients between {min_z} < z < {max_z}')
 
-        all_results = simul.populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground, min_z = min_z, number_redshifts = number_redshifts)
+        all_results = simul.populate_redshift_range_test(type, models, max_z, MyTelescope, MyBackground, min_z = min_z, number_redshifts = number_redshifts, starting_number = starting_number)
         
-        for band in ['uv', 'u', 'g']:
+        for band in passbands:
             overview = stats.statistics(all_results, max_z, type, band = band, test = True, number_redshifts = number_redshifts)
             overview.to_csv(f'results/statistics_{type}_{max_z}_{band}_{cadence}d_{exposure}s_{number_redshifts}_test.csv', index = False)
 

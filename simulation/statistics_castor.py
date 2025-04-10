@@ -186,7 +186,7 @@ def process_light_curve(i, df, band, snr_lim=5, n_det_above_snr=2, plateau=False
 
 # Function that iterates over the results file and passes each light curve to the process_light_curve function
 # Checks if statistics have previously been run for any of the light curves and if so, picks up where it left off
-def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100, c_ra=9.45, c_dec=-44.0, test = False, number_redshifts = 10, plateau=False):
+def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interval=10, band='g', cadence = 1.0, exposure = 100, c_ra=9.45, c_dec=-44.0, test = False, number_redshifts = 10, plateau=False, starting_number = 0):
 
     # Check if redshift array file exists, else create it
     # redshift_filename = f'results/redshift_array_{type}_{max_z}_{c_ra}_{c_dec}.npy'
@@ -209,8 +209,8 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         overview = pd.DataFrame(pd.read_csv(overview_file))
 
         # Checks how many transients we need to run, and how many have already been processed
-        num_transients = len(df)
-        numbers_total = np.arange(0, num_transients, 1)
+        num_transients = len(list(set(df['number'])))
+        numbers_total = np.arange(starting_number, num_transients + starting_number, 1)
         numbers_completed = list(set(overview['number']))
         numbers = list(set(numbers_total) - set(numbers_completed))
         print(f'{len(numbers_completed)} already processed, processing remaining {len(numbers)} \n')
@@ -220,7 +220,6 @@ def statistics(df, max_z, type, snr_lim=5, n_det_above_snr=2, checkpoint_interva
         numbers = list(set(df['number']))
 
     if test == False:
-
 
         # Iterates over remaining numbers to be processed and passes light curves to process_light_curve function
         for number in numbers:
